@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎸 Guitar Scale Finder</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#1c2128;--borde:#30363d;
+  --acento:#e94560;--acento2:#ffd700;--txt:#e6edf3;--txt2:#8b949e;
+  --madera:#3d2a14;--madera2:#5c3d1e;--fret:#8b7355;--cuerda:#c8b88a;--r:8px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px}
+.app{display:flex;flex-direction:column;min-height:100vh}
+
+/* Header */
+.app-header{background:var(--bg2);border-bottom:2px solid var(--acento);padding:14px 24px}
+.hdr{display:flex;align-items:center;gap:14px}
+.hdr-ico{font-size:2rem;line-height:1}
+.app-header h1{font-size:1.6rem;color:var(--acento2);letter-spacing:-0.5px}
+.app-header p{color:var(--txt2);font-size:13px;margin-top:2px}
+
+/* Layout */
+.app-main{display:grid;grid-template-columns:305px 1fr;flex:1}
+
+/* Panel izquierdo */
+.panel-izq{background:var(--bg2);border-right:1px solid var(--borde);overflow-y:auto;display:flex;flex-direction:column}
+.sec{padding:18px;border-bottom:1px solid var(--borde)}
+.sec-escalas{flex:1}
+.sec-tit{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--acento2);margin-bottom:12px}
+
+/* Input acorde */
+.inp-grp{display:flex;gap:6px;margin-bottom:8px}
+.inp{flex:1;background:var(--bg);border:1px solid var(--borde);border-radius:var(--r);padding:8px 12px;color:var(--txt);font-size:14px;outline:none;transition:border-color .15s}
+.inp:focus{border-color:var(--acento)}
+.btn-add{background:var(--acento);color:#fff;border:none;border-radius:var(--r);width:36px;font-size:20px;cursor:pointer;flex-shrink:0}
+.btn-add:hover{background:#c73352}
+.err-msg{color:#ff6666;font-size:12px;margin-bottom:6px}
+
+/* Acordes rápidos */
+.acordes-rapidos{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.btn-rapido{background:var(--bg3);color:var(--txt2);border:1px solid var(--borde);border-radius:20px;padding:3px 10px;font-size:12px;cursor:pointer;transition:all .15s}
+.btn-rapido:hover{color:var(--acento2);border-color:var(--acento2)}
+
+/* Chips */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;min-height:28px}
+.txt-vacio{color:var(--txt2);font-size:12px;font-style:italic}
+.chip{display:flex;align-items:center;gap:4px;background:rgba(233,69,96,.12);border:1px solid var(--acento);border-radius:20px;padding:4px 10px;font-size:13px;font-weight:600}
+.chip-del{background:none;border:none;color:var(--txt2);cursor:pointer;font-size:15px;line-height:1;padding:0 0 1px}
+.chip-del:hover{color:var(--acento)}
+.btn-txt{background:none;border:1px solid var(--borde);color:var(--txt2);border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;margin-top:4px}
+.btn-txt:hover{border-color:var(--acento);color:var(--acento)}
+
+/* Escalas detectadas */
+.esc-item{background:var(--bg);border:1px solid var(--borde);border-left:4px solid;border-radius:var(--r);padding:10px 12px;cursor:pointer;margin-bottom:8px;position:relative;transition:background .15s}
+.esc-item:hover{background:var(--bg3)}
+.esc-cab{display:flex;justify-content:space-between;align-items:baseline}
+.esc-nom{font-size:14px;font-weight:600}
+.esc-pct{font-size:13px;font-weight:700}
+.esc-barra{height:3px;background:var(--bg2);border-radius:2px;margin:6px 0;overflow:hidden}
+.esc-rel{height:100%;border-radius:2px;transition:width .4s}
+.esc-grados{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.grado-badge{background:var(--bg2);border:1px solid var(--borde);border-radius:4px;padding:1px 5px;font-size:11px;color:var(--txt2)}
+.esc-ver{position:absolute;right:10px;bottom:8px;font-size:11px;color:var(--txt2)}
+.esc-item:hover .esc-ver{color:var(--acento2)}
+
+/* Panel derecho */
+.panel-der{padding:20px;overflow-x:auto;background:var(--bg)}
+
+/* Tabs */
+.tabs{display:flex;border-bottom:2px solid var(--borde);margin-bottom:20px}
+.tab{background:none;border:none;color:var(--txt2);padding:10px 20px;font-size:14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s}
+.tab:hover{color:var(--txt)}
+.tab-on{color:var(--acento2);border-bottom-color:var(--acento2)}
+
+/* Detector */
+.det-barra{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.det-instr{color:var(--txt2);font-size:13px}
+.btn-sec{background:var(--bg2);color:var(--txt);border:1px solid var(--borde);border-radius:6px;padding:6px 14px;font-size:13px;cursor:pointer}
+.btn-sec:hover{border-color:var(--acento);color:var(--acento)}
+.panel-res{margin-top:16px;background:var(--bg2);border:1px solid var(--borde);border-radius:var(--r);padding:14px}
+.res-notas{font-size:13px;color:var(--txt2);margin-bottom:10px}
+.res-tit{font-size:12px;font-weight:600;color:var(--acento2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.res-sin{color:var(--txt2);font-size:13px;font-style:italic}
+.acordes-det{display:flex;flex-direction:column;gap:6px}
+.ac-card{background:var(--bg);border:1px solid var(--borde);border-radius:6px;padding:8px 12px}
+.ac-card.exacto{border-left:3px solid #4CAF50}
+.ac-card.parcial{border-left:3px solid #FF9800}
+.ac-card.sugerencia{border-left:3px solid #555;opacity:.85}
+.sug-falta{font-size:11px;color:var(--txt2);flex:1}
+.sug-falta b{color:#ff9944}
+.ac-fila-top{display:flex;align-items:center;gap:10px}
+.ac-nom{font-size:17px;font-weight:700;min-width:60px}
+.ac-tipo{font-size:11px;color:var(--txt2);flex:1}
+.ac-notas-det{margin-top:5px;font-size:12px;color:var(--acento2);letter-spacing:.5px;padding-left:2px}
+.btn-ag-det{background:rgba(233,69,96,.15);color:var(--acento);border:1px solid var(--acento);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+.btn-ag-det:hover{background:rgba(233,69,96,.3)}
+
+/* Mapa controles */
+.mapa-ctrl{display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.ctrl-grp{display:flex;flex-direction:column;gap:4px}
+.ctrl-lab{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--txt2)}
+.ctrl-sel{background:var(--bg2);color:var(--txt);border:1px solid var(--borde);border-radius:6px;padding:7px 12px;font-size:14px;outline:none;cursor:pointer}
+.ctrl-sel:focus{border-color:var(--acento2)}
+.leyenda{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.ley-item{display:flex;align-items:center;gap:6px}
+.ley-col{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.ley-txt{font-size:12px;color:var(--txt2)}
+.diat-box{margin-top:20px;background:var(--bg2);border:1px solid var(--borde);border-radius:var(--r);padding:14px}
+.diat-tit{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--acento2);margin-bottom:12px}
+.diat-lista{display:flex;flex-wrap:wrap;gap:8px}
+.diat-item{display:flex;flex-direction:column;align-items:center;background:var(--bg);border:1px solid;border-radius:8px;padding:8px 14px;min-width:60px}
+.diat-grado{font-size:11px;font-weight:700}
+.diat-nom{font-size:16px;font-weight:800;margin-top:2px}
+
+/* ── Mástil ── */
+.mastil-wrap{overflow-x:auto;padding-bottom:8px;user-select:none}
+.m-row{display:flex;align-items:center}
+.m-espacio{width:42px;flex-shrink:0}
+.marc-celda{width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;height:18px;gap:6px}
+.marc-pto{width:8px;height:8px;border-radius:50%;background:#3a3a5a}
+.num-traste{width:56px;flex-shrink:0;text-align:center;font-size:11px;color:var(--txt2)}
+.mastil-body{background:var(--madera);border:2px solid var(--madera2);border-radius:4px;padding:8px 0;min-width:fit-content}
+.m-cuerda{display:flex;align-items:center;position:relative;height:44px}
+.c-label{width:42px;flex-shrink:0;text-align:center;font-size:12px;font-weight:700;color:var(--acento2);position:relative;z-index:2}
+.c-linea{position:absolute;left:42px;right:0;background:var(--cuerda);top:50%;transform:translateY(-50%);z-index:0;pointer-events:none;opacity:.7}
+.m-celda{width:56px;flex-shrink:0;height:44px;position:relative;display:flex;align-items:center;justify-content:center;z-index:1}
+.m-celda.clickable{cursor:pointer}
+.m-celda.clickable:hover .nota-pto{transform:scale(1.1)}
+.traste-l{position:absolute;left:0;top:4px;bottom:4px;width:2px;background:var(--fret);border-radius:1px;z-index:1;pointer-events:none}
+.nota-pto{position:relative;z-index:3;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:transform .1s;pointer-events:none}
+.nota-txt{font-size:10px;font-weight:800;color:#111}
+
+@media(max-width:800px){.app-main{grid-template-columns:1fr}.panel-izq{border-right:none;border-bottom:1px solid var(--borde)}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="app-header">
+    <div class="hdr">
+      <span class="hdr-ico">🎸</span>
+      <div>
+        <h1>Guitar Scale Finder</h1>
+        <p>Detecta acordes en el mástil · Encuentra la escala musical</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <!-- Panel izquierdo -->
+    <aside class="panel-izq">
+      <section class="sec">
+        <h2 class="sec-tit">Lista de Acordes</h2>
+        <div class="inp-grp">
+          <input id="inp-acorde" class="inp" type="text" placeholder="Ej: Am, C, G7, Emaj7...">
+          <button id="btn-add" class="btn-add">+</button>
+        </div>
+        <p id="err-msg" class="err-msg" hidden></p>
+        <div id="acordes-rapidos" class="acordes-rapidos"></div>
+        <div id="chips" class="chips"></div>
+        <button id="btn-clear-list" class="btn-txt" hidden>Limpiar lista</button>
+      </section>
+      <section class="sec sec-escalas">
+        <h2 class="sec-tit">Escalas Detectadas</h2>
+        <div id="escalas-lista"></div>
+      </section>
+    </aside>
+
+    <!-- Panel derecho -->
+    <section class="panel-der">
+      <div class="tabs">
+        <button class="tab tab-on" id="tab-det" onclick="cambiarModo('detector')">🎵 Detectar Acorde</button>
+        <button class="tab" id="tab-map" onclick="cambiarModo('mapa')">🗺️ Mapa de Escala</button>
+      </div>
+      <div id="panel-contenido"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATOS — Teoría musical
+// ═══════════════════════════════════════════════════
+
+const NOTAS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const BEMOLES = {Db:'C#',Eb:'D#',Fb:'E',Gb:'F#',Ab:'G#',Bb:'A#',Cb:'B'};
+const AFINACION = [4,9,2,7,11,4]; // E A D G B e (C=0)
+const NOMBRES_CUERDAS = ['E','A','D','G','B','e'];
+const GROSOR_CUERDAS  = [3.5, 3, 2.5, 2, 1.5, 1];
+const COLORES_GRADO   = ['#ff4444','#ff8c00','#ffd700','#44dd44','#00cccc','#4488ff','#cc44ff'];
+const ACORDES_RAPIDOS = ['C','Dm','Em','F','G','Am','A','Bm','D','E','G7','Am7'];
+
+const TIPOS_ACORDE = {
+  mayor:          {intervalos:[0,4,7],     sufijo:''},
+  menor:          {intervalos:[0,3,7],     sufijo:'m'},
+  dom7:           {intervalos:[0,4,7,10],  sufijo:'7'},
+  menor7:         {intervalos:[0,3,7,10],  sufijo:'m7'},
+  maj7:           {intervalos:[0,4,7,11],  sufijo:'maj7'},
+  disminuido:     {intervalos:[0,3,6],     sufijo:'dim'},
+  dim7:           {intervalos:[0,3,6,9],   sufijo:'dim7'},
+  semidisminuido: {intervalos:[0,3,6,10],  sufijo:'m7b5'},
+  aumentado:      {intervalos:[0,4,8],     sufijo:'aug'},
+  sus2:           {intervalos:[0,2,7],     sufijo:'sus2'},
+  sus4:           {intervalos:[0,5,7],     sufijo:'sus4'},
+};
+const MAPA_SUFIJO = Object.fromEntries(Object.entries(TIPOS_ACORDE).map(([k,v])=>[v.sufijo,k]));
+
+const TIPOS_ESCALA = {
+  mayor:{
+    nombre:'Mayor',color:'#4CAF50',
+    intervalos:[0,2,4,5,7,9,11],
+    acordesDiat:['mayor','menor','menor','mayor','mayor','menor','disminuido'],
+    grados:['I','ii','iii','IV','V','vi','vii°'],
+  },
+  menor:{
+    nombre:'Menor Natural',color:'#2196F3',
+    intervalos:[0,2,3,5,7,8,10],
+    acordesDiat:['menor','disminuido','mayor','menor','menor','mayor','mayor'],
+    grados:['i','ii°','III','iv','v','VI','VII'],
+  },
+  pentatonica_mayor:{
+    nombre:'Pentatónica Mayor',color:'#FF9800',
+    intervalos:[0,2,4,7,9],
+    acordesDiat:null,
+    grados:['1','2','3','5','6'],
+  },
+  pentatonica_menor:{
+    nombre:'Pentatónica Menor',color:'#9C27B0',
+    intervalos:[0,3,5,7,10],
+    acordesDiat:null,
+    grados:['1','♭3','4','5','♭7'],
+  },
+};
+
+// ═══════════════════════════════════════════════════
+// ESTADO
+// ═══════════════════════════════════════════════════
+
+const est = {
+  listaAcordes: [],
+  posSelec: new Map(),   // `${c}-${t}` → {notaIdx}
+  modo: 'detector',
+  tonica: 'C',
+  tipoEsc: 'mayor',
+};
+
+// ═══════════════════════════════════════════════════
+// SERVICIO — AnalizadorAcorde (SRP)
+// ═══════════════════════════════════════════════════
+
+const REGEX_AC = /^([A-G][#b]?)(m7b5|maj7|dim7|m7|aug|dim|sus2|sus4|m|7)?$/;
+
+function normNota(n){ return BEMOLES[n] ?? n; }
+
+function parsearAcorde(txt){
+  const m = txt.trim().match(REGEX_AC);
+  if(!m) return null;
+  const raiz = normNota(m[1]);
+  const suf  = m[2] ?? '';
+  const tipo = MAPA_SUFIJO[suf];
+  if(tipo === undefined) return null;
+  return {raiz, tipo, nombre:`${raiz}${TIPOS_ACORDE[tipo].sufijo}`};
+}
+
+function sugerirAcordeCercano(notasSet){
+  const arr = [...notasSet];
+  if(arr.length < 2) return [];
+  const res = [];
+  for(let ri=0; ri<12; ri++){
+    for(const [tipo, ac] of Object.entries(TIPOS_ACORDE)){
+      const acNotas = ac.intervalos.map(i=>(ri+i)%12);
+      const enComun  = acNotas.filter(n=>arr.includes(n));
+      const faltantes = acNotas.filter(n=>!arr.includes(n));
+      // Solo sugerir si coinciden al menos 2 notas y falta como máximo 1
+      if(enComun.length >= 2 && faltantes.length <= 1 && faltantes.length > 0){
+        res.push({
+          nombre:`${NOTAS[ri]}${ac.sufijo}`,
+          notasAcorde: acNotas.map(n=>NOTAS[n]),
+          faltantes: faltantes.map(n=>NOTAS[n]),
+          score: enComun.length * 10 - faltantes.length * 5,
+        });
+      }
+    }
+  }
+  // Dedup por nombre, ordenar por score
+  const vistos = new Set();
+  return res
+    .sort((a,b)=>b.score-a.score)
+    .filter(s=>{ if(vistos.has(s.nombre)) return false; vistos.add(s.nombre); return true; })
+    .slice(0,5);
+}
+
+function identificarAcordeDesdeNotas(notasSet){
+  const arr = [...notasSet];
+  if(arr.length < 2) return [];
+  const res = [];
+  for(const ri of arr){
+    for(const [tipo, ac] of Object.entries(TIPOS_ACORDE)){
+      const acNotas = ac.intervalos.map(i=>(ri+i)%12);
+      if(acNotas.every(n=>arr.includes(n))){
+        res.push({
+          nombre:`${NOTAS[ri]}${ac.sufijo}`, raiz:NOTAS[ri], tipo,
+          esExacto: acNotas.length === arr.length,
+          coincidencias: acNotas.length,
+          notasAcorde: acNotas.map(n=>NOTAS[n]),
+        });
+      }
+    }
+  }
+  return res.sort((a,b)=> (b.esExacto?1:0)-(a.esExacto?1:0) || b.coincidencias-a.coincidencias);
+}
+
+// ═══════════════════════════════════════════════════
+// SERVICIO — DetectorEscala (SRP)
+// ═══════════════════════════════════════════════════
+
+function detectarEscala(lista){
+  if(!lista.length) return [];
+  const parsed = lista.map(parsearAcorde).filter(Boolean);
+  if(!parsed.length) return [];
+  const res = [];
+  for(const [tipoEsc, escala] of Object.entries(TIPOS_ESCALA)){
+    if(!escala.acordesDiat) continue;
+    for(let ti=0; ti<12; ti++){
+      const diat = escala.intervalos.map((int,g)=>({
+        ri:(ti+int)%12, tipo:escala.acordesDiat[g], grado:escala.grados[g]
+      }));
+      const coin = [];
+      for(const ac of parsed){
+        const ri = NOTAS.indexOf(ac.raiz);
+        const d  = diat.find(d=>d.ri===ri && (
+          d.tipo===ac.tipo ||
+          (d.tipo==='mayor' && ac.tipo==='dom7') ||
+          (d.tipo==='disminuido' && ac.tipo==='dim7')
+        ));
+        if(d) coin.push({acorde:ac.nombre, grado:d.grado});
+      }
+      if(coin.length){
+        const pct = Math.round(coin.length/parsed.length*100);
+        res.push({
+          tonica:NOTAS[ti], tipo:tipoEsc,
+          nombre:`${NOTAS[ti]} ${escala.nombre}`,
+          color:escala.color, coincidencias:coin.length,
+          total:parsed.length, porcentaje:pct, coin,
+        });
+      }
+    }
+  }
+  return res.sort((a,b)=>b.porcentaje-a.porcentaje||b.coincidencias-a.coincidencias).slice(0,10);
+}
+
+// ═══════════════════════════════════════════════════
+// SERVICIO — GeneradorMapa (SRP)
+// ═══════════════════════════════════════════════════
+
+function generarMapa(tonicaNom, tipoEsc, numTrastes=12){
+  const esc = TIPOS_ESCALA[tipoEsc];
+  if(!esc) return [];
+  const ti = NOTAS.indexOf(tonicaNom);
+  if(ti<0) return [];
+  const notasEsc = esc.intervalos.map(i=>(ti+i)%12);
+  const pos = [];
+  for(let c=0;c<6;c++){
+    for(let t=0;t<=numTrastes;t++){
+      const ni=(AFINACION[c]+t)%12;
+      const g=notasEsc.indexOf(ni);
+      if(g!==-1) pos.push({cuerda:c,traste:t,notaIdx:ni,notaNom:NOTAS[ni],grado:g,esTonica:ni===ti});
+    }
+  }
+  return pos;
+}
+
+// ═══════════════════════════════════════════════════
+// COMPONENTE — Mástil (HTML puro)
+// ═══════════════════════════════════════════════════
+
+function htmlMastil(posSelec, posDestac=[], modoLectura=false){
+  const mapaDest = new Map(posDestac.map(p=>[`${p.cuerda}-${p.traste}`,p]));
+  let h='<div class="mastil-wrap">';
+
+  // Marcadores decorativos (3, 5, 7, 9, 12)
+  h+='<div class="m-row" style="height:20px;margin-bottom:2px"><div class="m-espacio"></div>';
+  for(let t=0;t<=12;t++){
+    h+='<div class="marc-celda">';
+    if([3,5,7,9].includes(t)) h+='<div class="marc-pto"></div>';
+    else if(t===12)           h+='<div class="marc-pto"></div><div class="marc-pto"></div>';
+    h+='</div>';
+  }
+  h+='</div>';
+
+  // Números de traste
+  h+='<div class="m-row" style="margin-bottom:4px"><div class="m-espacio"></div>';
+  for(let t=0;t<=12;t++) h+=`<div class="num-traste">${t||''}</div>`;
+  h+='</div>';
+
+  // Cuerpo del mástil
+  h+='<div class="mastil-body">';
+  for(let c=5;c>=0;c--){
+    h+=`<div class="m-cuerda"><div class="c-label">${NOMBRES_CUERDAS[c]}</div>`;
+    h+=`<div class="c-linea" style="height:${GROSOR_CUERDAS[c]}px"></div>`;
+    for(let t=0;t<=12;t++){
+      const ni=(AFINACION[c]+t)%12;
+      const key=`${c}-${t}`;
+      const sel=posSelec.has(key);
+      const dest=mapaDest.get(key);
+      const color=dest?(COLORES_GRADO[dest.grado]||'#fff'):sel?'#ffd700':null;
+      const attrs=!modoLectura?`data-c="${c}" data-t="${t}" data-ni="${ni}"`:'';
+      h+=`<div class="m-celda${modoLectura?'':' clickable'}" ${attrs}>`;
+      if(t>0) h+='<div class="traste-l"></div>';
+      if(color) h+=`<div class="nota-pto" style="background:${color};box-shadow:0 0 8px ${color}80"><span class="nota-txt">${dest?dest.notaNom:NOTAS[ni]}</span></div>`;
+      h+='</div>';
+    }
+    h+='</div>';
+  }
+  h+='</div></div>';
+  return h;
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER — Panel izquierdo
+// ═══════════════════════════════════════════════════
+
+function renderIzq(){
+  // Chips
+  const chips = document.getElementById('chips');
+  chips.innerHTML = est.listaAcordes.length
+    ? est.listaAcordes.map(a=>`<span class="chip">${a}<button class="chip-del" onclick="eliminarAcorde('${a}')">×</button></span>`).join('')
+    : '<span class="txt-vacio">Agrega acordes o detéctalos en el mástil →</span>';
+
+  document.getElementById('btn-clear-list').hidden = !est.listaAcordes.length;
+
+  // Escalas
+  const escalas = detectarEscala(est.listaAcordes);
+  const el = document.getElementById('escalas-lista');
+  if(!escalas.length){
+    el.innerHTML=`<span class="txt-vacio">${est.listaAcordes.length?'Sin coincidencias.':'Agrega acordes para buscar la escala'}</span>`;
+    return;
+  }
+  el.innerHTML = escalas.map(e=>`
+    <div class="esc-item" style="border-left-color:${e.color}" onclick="verMapa('${e.tonica}','${e.tipo}')">
+      <div class="esc-cab"><span class="esc-nom">${e.nombre}</span><span class="esc-pct" style="color:${e.color}">${e.porcentaje}%</span></div>
+      <div class="esc-barra"><div class="esc-rel" style="width:${e.porcentaje}%;background:${e.color}"></div></div>
+      <div class="esc-grados">${e.coin.map(c=>`<span class="grado-badge">${c.grado}=${c.acorde}</span>`).join('')}</div>
+      <span class="esc-ver">Ver mapa →</span>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER — Panel derecho
+// ═══════════════════════════════════════════════════
+
+function renderDer(){
+  document.getElementById('tab-det').classList.toggle('tab-on', est.modo==='detector');
+  document.getElementById('tab-map').classList.toggle('tab-on', est.modo==='mapa');
+  const contenedor = document.getElementById('panel-contenido');
+  est.modo==='detector' ? renderDetector(contenedor) : renderMapa(contenedor);
+}
+
+function renderDetector(cont){
+  const notasSet = new Set();
+  est.posSelec.forEach(({notaIdx})=>notasSet.add(notaIdx));
+  const acordes = identificarAcordeDesdeNotas(notasSet);
+
+  let h=`<div class="det-barra">
+    <p class="det-instr">Una nota por cuerda · mínimo 3 cuerdas para detectar</p>
+    <button class="btn-sec" onclick="limpiarMastil()">Limpiar</button>
+  </div>`;
+  h += htmlMastil(est.posSelec);
+
+  if(notasSet.size){
+    h+=`<div class="panel-res"><p class="res-notas">Notas pulsadas: ${[...notasSet].map(i=>NOTAS[i]).join(' · ')}</p>`;
+    if(est.posSelec.size < 3){
+      h+=`<p class="res-sin">Selecciona al menos 3 cuerdas para detectar el acorde.</p>`;
+    } else if(acordes.length){
+      h+=`<p class="res-tit">Acordes identificados:</p><div class="acordes-det">`;
+      acordes.slice(0,6).forEach(ac=>{
+        h+=`<div class="ac-card ${ac.esExacto?'exacto':'parcial'}">
+          <div class="ac-fila-top">
+            <span class="ac-nom">${ac.nombre}</span>
+            <span class="ac-tipo">${ac.esExacto?'✓ exacto':'~ parcial'}</span>
+            <button class="btn-ag-det" onclick="agregarDetectado('${ac.nombre}')">+ Lista</button>
+          </div>
+          <div class="ac-notas-det">${ac.notasAcorde.join(' · ')}</div>
+        </div>`;
+      });
+      h+='</div>';
+    } else {
+      const sugerencias = sugerirAcordeCercano(notasSet);
+      if(sugerencias.length){
+        h+=`<p class="res-tit">No detectado · ¿Quisiste decir...?</p><div class="acordes-det">`;
+        sugerencias.forEach(s=>{
+          h+=`<div class="ac-card sugerencia">
+            <div class="ac-fila-top">
+              <span class="ac-nom">${s.nombre}</span>
+              <span class="ac-tipo sug-falta">falta: <b>${s.faltantes.join(', ')}</b></span>
+            </div>
+            <div class="ac-notas-det">${s.notasAcorde.join(' · ')}</div>
+          </div>`;
+        });
+        h+='</div>';
+      } else {
+        h+='<p class="res-sin">Combinación de notas no estándar (posible nota equivocada).</p>';
+      }
+    }
+    h+='</div>';
+  }
+
+  cont.innerHTML = h;
+
+  // Event delegation: una nota por cuerda; mismo traste → deselecciona
+  const body = cont.querySelector('.mastil-body');
+  if(body) body.addEventListener('click', e=>{
+    const celda = e.target.closest('[data-c]');
+    if(!celda) return;
+    const c = celda.dataset.c;
+    const key = `${c}-${celda.dataset.t}`;
+    if(est.posSelec.has(key)){
+      est.posSelec.delete(key);
+    } else {
+      // Quitar nota previa de esta cuerda
+      for(const k of [...est.posSelec.keys()]) if(k.startsWith(`${c}-`)) est.posSelec.delete(k);
+      est.posSelec.set(key, {notaIdx:+celda.dataset.ni});
+    }
+    renderDetector(cont);
+  });
+}
+
+function renderMapa(cont){
+  const posDestac = generarMapa(est.tonica, est.tipoEsc);
+  const escala    = TIPOS_ESCALA[est.tipoEsc];
+  const ti        = NOTAS.indexOf(est.tonica);
+
+  let h=`<div class="mapa-ctrl">
+    <div class="ctrl-grp">
+      <label class="ctrl-lab">Tónica</label>
+      <select class="ctrl-sel" id="sel-ton">${NOTAS.map(n=>`<option${n===est.tonica?' selected':''}>${n}</option>`).join('')}</select>
+    </div>
+    <div class="ctrl-grp">
+      <label class="ctrl-lab">Escala</label>
+      <select class="ctrl-sel" id="sel-esc">${Object.entries(TIPOS_ESCALA).map(([k,e])=>`<option value="${k}"${k===est.tipoEsc?' selected':''}>${e.nombre}</option>`).join('')}</select>
+    </div>
+  </div>`;
+
+  h += htmlMastil(new Map(), posDestac, true);
+
+  // Leyenda de colores
+  h+='<div class="leyenda">';
+  escala.grados.forEach((g,i)=>h+=`<div class="ley-item"><div class="ley-col" style="background:${COLORES_GRADO[i]}"></div><span class="ley-txt">${g}${i===0?' ('+est.tonica+')':''}</span></div>`);
+  h+='</div>';
+
+  // Acordes diatónicos
+  if(escala.acordesDiat){
+    const sufMap = {mayor:'',menor:'m',disminuido:'dim',dom7:'7',aumentado:'aug',semidisminuido:'m7b5',dim7:'dim7',sus2:'sus2',sus4:'sus4'};
+    h+=`<div class="diat-box"><p class="diat-tit">Acordes diatónicos de ${est.tonica} ${escala.nombre}:</p><div class="diat-lista">`;
+    escala.intervalos.forEach((int,i)=>{
+      const ri=(ti+int)%12;
+      const suf=sufMap[escala.acordesDiat[i]] ?? '';
+      h+=`<div class="diat-item" style="border-color:${COLORES_GRADO[i]}">
+        <span class="diat-grado" style="color:${COLORES_GRADO[i]}">${escala.grados[i]}</span>
+        <span class="diat-nom">${NOTAS[ri]}${suf}</span>
+      </div>`;
+    });
+    h+='</div></div>';
+  }
+
+  cont.innerHTML = h;
+
+  document.getElementById('sel-ton').addEventListener('change',e=>{ est.tonica=e.target.value; renderMapa(cont); });
+  document.getElementById('sel-esc').addEventListener('change',e=>{ est.tipoEsc=e.target.value; renderMapa(cont); });
+}
+
+// ═══════════════════════════════════════════════════
+// ACCIONES
+// ═══════════════════════════════════════════════════
+
+function agregarAcorde(txt){
+  // Acepta múltiples acordes separados por coma: "Am, C, G" o "D#," (con coma al final)
+  const partes = txt.split(/[,;]+/).map(s=>s.trim()).filter(Boolean);
+  const invalidos = [];
+  let agregados = 0;
+  partes.forEach(p=>{
+    const parsed = parsearAcorde(p);
+    if(parsed){
+      if(!est.listaAcordes.includes(parsed.nombre)) est.listaAcordes.push(parsed.nombre);
+      agregados++;
+    } else {
+      invalidos.push(p);
+    }
+  });
+  const err = document.getElementById('err-msg');
+  if(invalidos.length){
+    err.textContent=`No válido: ${invalidos.map(v=>`"${v}"`).join(', ')}. Ej: Am, C#m7, D#`;
+    err.hidden=false;
+  } else {
+    err.hidden=true;
+  }
+  if(agregados) document.getElementById('inp-acorde').value='';
+  renderIzq();
+}
+
+function eliminarAcorde(a){
+  est.listaAcordes = est.listaAcordes.filter(x=>x!==a);
+  renderIzq();
+}
+
+function limpiarMastil(){
+  est.posSelec.clear();
+  renderDer();
+}
+
+function agregarDetectado(nombre){
+  const parsed=parsearAcorde(nombre);
+  if(parsed && !est.listaAcordes.includes(parsed.nombre)) est.listaAcordes.push(parsed.nombre);
+  est.posSelec.clear();
+  renderIzq();
+  renderDer();
+}
+
+function cambiarModo(modo){
+  est.modo=modo;
+  renderDer();
+}
+
+function verMapa(tonica, tipo){
+  est.tonica=tonica; est.tipoEsc=tipo; est.modo='mapa';
+  renderDer();
+}
+
+// ═══════════════════════════════════════════════════
+// INICIALIZACIÓN
+// ═══════════════════════════════════════════════════
+
+document.getElementById('acordes-rapidos').innerHTML =
+  ACORDES_RAPIDOS.map(a=>`<button class="btn-rapido" onclick="agregarAcorde('${a}')">${a}</button>`).join('');
+
+document.getElementById('inp-acorde').addEventListener('keydown', e=>{
+  if(e.key==='Enter'){ const v=e.target.value.trim(); if(v) agregarAcorde(v); }
+});
+document.getElementById('btn-add').addEventListener('click', ()=>{
+  const v=document.getElementById('inp-acorde').value.trim(); if(v) agregarAcorde(v);
+});
+document.getElementById('btn-clear-list').addEventListener('click', ()=>{
+  est.listaAcordes=[]; renderIzq();
+});
+
+renderIzq();
+renderDer();
+</script>
+</body>
+</html>

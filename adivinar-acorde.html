@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprende Acordes - Guitarra</title>
+    <style>
+        :root {
+            --fondo: #1a1a2e;
+            --panel: #16213e;
+            --acento: #f0a500;
+            --verde: #2ecc71;
+            --rojo: #e74c3c;
+            --texto: #e0e0e0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--fondo);
+            color: var(--texto);
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            padding: 18px 12px;
+            min-height: 100vh;
+        }
+        h1 { color: var(--acento); font-size: 1.5em; letter-spacing: 3px; }
+        .fila {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .panel {
+            background: var(--panel);
+            border-radius: 10px;
+            padding: 12px 18px;
+        }
+        label { font-size: 0.82em; color: #aaa; margin-right: 5px; }
+        select {
+            background: #0f3460;
+            color: white;
+            padding: 6px 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.88em;
+            cursor: pointer;
+        }
+        #display-acorde { text-align: center; min-width: 170px; }
+        #nombre-acorde {
+            font-size: 3em;
+            font-weight: 700;
+            color: var(--acento);
+            line-height: 1;
+        }
+        #descripcion-acorde { font-size: 0.82em; color: #999; margin-top: 4px; }
+        #contenedor-mastil {
+            background: linear-gradient(180deg, #3d1f05 0%, #2b1504 50%, #3d1f05 100%);
+            border-radius: 12px;
+            padding: 10px 14px;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.6), inset 0 0 25px rgba(0,0,0,0.3);
+            border: 2px solid #5a3010;
+            overflow-x: auto;
+        }
+        canvas { display: block; cursor: crosshair; }
+        button {
+            padding: 9px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.92em;
+            font-weight: 600;
+            transition: opacity 0.15s, transform 0.1s;
+        }
+        button:hover:not(:disabled) { opacity: 0.82; transform: translateY(-1px); }
+        button:active:not(:disabled) { transform: translateY(0); }
+        button:disabled { opacity: 0.35; cursor: not-allowed; }
+        #btn-tocar {
+            background: var(--acento);
+            color: #1a1a2e;
+            font-size: 1em;
+            padding: 11px 26px;
+        }
+        #btn-limpiar { background: #c0392b; color: white; }
+        #btn-siguiente { background: #27ae60; color: white; }
+        #btn-pista { background: #7d3c98; color: white; }
+        #feedback {
+            font-size: 1.3em;
+            font-weight: bold;
+            min-height: 1.6em;
+            text-align: center;
+        }
+        .correcto  { color: var(--verde); }
+        .incorrecto { color: var(--rojo); }
+        #info-notas { font-size: 0.83em; color: #aaa; }
+        #pista {
+            background: rgba(125, 60, 152, 0.18);
+            border: 1px solid #7d3c98;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 0.88em;
+            max-width: 600px;
+            text-align: center;
+            display: none;
+        }
+        #instruccion {
+            font-size: 0.78em;
+            color: #666;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<h1>ACORDES DE GUITARRA</h1>
+
+<div class="fila">
+    <div class="panel">
+        <label>Modo:</label>
+        <select id="selector-modo">
+            <option value="libre">Libre (todos los acordes)</option>
+            <option value="escala">Escala diatónica</option>
+        </select>
+        <span id="controles-escala" style="display:none; margin-left:8px;">
+            <label>Tónica:</label>
+            <select id="selector-tonalidad"></select>
+            <label style="margin-left:8px;">Escala:</label>
+            <select id="selector-escala">
+                <option value="mayor">Mayor</option>
+                <option value="menorNatural">Menor Natural</option>
+                <option value="menorArmonica">Menor Armónica</option>
+            </select>
+        </span>
+    </div>
+
+    <div class="panel" id="display-acorde">
+        <div id="nombre-acorde">—</div>
+        <div id="descripcion-acorde">Presiona "Siguiente →" para empezar</div>
+    </div>
+
+    <div class="panel" style="font-size:0.9em;">
+        ✓ <span id="cnt-ok" style="color:var(--verde);font-weight:bold">0</span>
+        &ensp;✗ <span id="cnt-mal" style="color:var(--rojo);font-weight:bold">0</span>
+    </div>
+</div>
+
+<div id="contenedor-mastil">
+    <canvas id="mastil"></canvas>
+</div>
+
+<div class="fila">
+    <button id="btn-limpiar">✕ Limpiar</button>
+    <button id="btn-tocar" disabled>▶ Tocar / Confirmar</button>
+    <button id="btn-siguiente">Siguiente →</button>
+    <button id="btn-pista">💡 Pista</button>
+</div>
+
+<div id="feedback"></div>
+<div id="info-notas">Seleccionadas: <span id="texto-notas">—</span></div>
+<div id="pista"></div>
+<div id="instruccion">Marca 4 notas (una por cuerda) que formen el acorde mostrado. Una nota de la tríada se repite.</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// TeoríaMusical — notas, acordes, escalas (SRP)
+// ══════════════════════════════════════════════════════════════
+const TeoríaMusical = (() => {
+    const NOTAS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+    const INTERVALOS_ACORDE = {
+        maj: [0, 4, 7],
+        m:   [0, 3, 7],
+        dim: [0, 3, 6],
+        aug: [0, 4, 8],
+    };
+
+    const NOMBRE_TIPO = { maj:'Mayor', m:'menor', dim:'disminuido', aug:'aumentado' };
+
+    const INTERVALOS_ESCALA = {
+        mayor:         [0, 2, 4, 5, 7, 9, 11],
+        menorNatural:  [0, 2, 3, 5, 7, 8, 10],
+        menorArmonica: [0, 2, 3, 5, 7, 8, 11],
+    };
+
+    const TIPOS_DIATONICOS = {
+        mayor:         ['maj','m','m','maj','maj','m','dim'],
+        menorNatural:  ['m','dim','maj','m','m','maj','maj'],
+        menorArmonica: ['m','dim','aug','m','maj','maj','dim'],
+    };
+
+    function idx(nota) { return NOTAS.indexOf(nota); }
+    function nombre(i)  { return NOTAS[((i % 12) + 12) % 12]; }
+
+    function notasDeAcorde(raiz, tipo) {
+        return INTERVALOS_ACORDE[tipo].map(i => nombre(idx(raiz) + i));
+    }
+
+    function acordesDiatonicos(tonalidad, tipoEscala) {
+        const base = idx(tonalidad);
+        return INTERVALOS_ESCALA[tipoEscala].map((iv, i) => {
+            const raiz = nombre(base + iv);
+            const tipo = TIPOS_DIATONICOS[tipoEscala][i];
+            return { raiz, tipo, notas: notasDeAcorde(raiz, tipo) };
+        });
+    }
+
+    function esVoicingValido(notasMidi, acorde) {
+        const selec = new Set(notasMidi.map(m => ((m % 12) + 12) % 12));
+        const objetivo = new Set(acorde.notas.map(n => idx(n)));
+        if (selec.size !== objetivo.size) return false;
+        for (const c of objetivo) { if (!selec.has(c)) return false; }
+        return true;
+    }
+
+    return { NOTAS, NOMBRE_TIPO, idx, nombre, notasDeAcorde, acordesDiatonicos, esVoicingValido };
+})();
+
+// ══════════════════════════════════════════════════════════════
+// Guitarra — afinación y cálculos del instrumento (SRP)
+// ══════════════════════════════════════════════════════════════
+const Guitarra = (() => {
+    const MIDI_BASE   = [40, 45, 50, 55, 59, 64]; // E2 A2 D3 G3 B3 e4
+    const NOMBRES_CUERDAS = ['E₂','A₂','D₃','G₃','B₃','e₄'];
+    const TRASTES = 16;
+    const CUERDAS = 6;
+
+    function obtenerNota(cuerda, traste) {
+        const midi = MIDI_BASE[cuerda] + traste;
+        return { midi, nombre: TeoríaMusical.nombre(midi) };
+    }
+
+    function midiAHz(midi) {
+        return 440 * Math.pow(2, (midi - 69) / 12);
+    }
+
+    return { MIDI_BASE, NOMBRES_CUERDAS, TRASTES, CUERDAS, obtenerNota, midiAHz };
+})();
+
+// ══════════════════════════════════════════════════════════════
+// MotorAudio — síntesis tipo guitarra con Web Audio API (SRP)
+// ══════════════════════════════════════════════════════════════
+class MotorAudio {
+    constructor() { this._ctx = null; }
+
+    _init() {
+        if (!this._ctx) this._ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (this._ctx.state === 'suspended') this._ctx.resume();
+    }
+
+    _nota(midi, t0, dur) {
+        const ctx = this._ctx;
+        const osc = ctx.createOscillator();
+        const env = ctx.createGain();
+        const real = new Float32Array([0, 0.55, 0.28, 0.14, 0.07, 0.035, 0.017]);
+        const imag = new Float32Array(real.length);
+        osc.setPeriodicWave(ctx.createPeriodicWave(real, imag));
+        osc.frequency.value = Guitarra.midiAHz(midi);
+        env.gain.setValueAtTime(0.001, t0);
+        env.gain.linearRampToValueAtTime(0.32, t0 + 0.012);
+        env.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+        osc.connect(env);
+        env.connect(ctx.destination);
+        osc.start(t0);
+        osc.stop(t0 + dur);
+    }
+
+    tocarAcorde(notasMidi) {
+        this._init();
+        const ahora = this._ctx.currentTime;
+        notasMidi.forEach((midi, i) => this._nota(midi, ahora + i * 0.065, 2.2));
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+// RenderizadorMastil — dibuja el canvas (SRP)
+// ══════════════════════════════════════════════════════════════
+class RenderizadorMastil {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this._layout();
+    }
+
+    _layout() {
+        const w = Math.min(window.innerWidth - 50, 980);
+        this.canvas.width  = w;
+        this.canvas.height = Math.round(w * 0.265);
+        const mg = { izq: 52, der: 16, arr: 26, aba: 16 };
+        this.mg = mg;
+        this.aw = w - mg.izq - mg.der;
+        this.ah = this.canvas.height - mg.arr - mg.aba;
+        this.dx = this.aw / Guitarra.TRASTES;
+        this.dy = this.ah / (Guitarra.CUERDAS - 1);
+        this.r  = Math.min(this.dx, this.dy) * 0.31;
+    }
+
+    xPos(traste)  { return this.mg.izq + (traste - 0.5) * this.dx; }
+    yPos(cuerda)  { return this.mg.arr + (Guitarra.CUERDAS - 1 - cuerda) * this.dy; }
+
+    dibujar(seleccionadas, estado) {
+        const { ctx, canvas } = this;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        this._fondo();
+        this._marcadores();
+        this._cejuela();
+        this._trastes();
+        this._cuerdas();
+        this._etiquetasCuerdas();
+        this._etiquetasTrastes();
+        this._puntos(seleccionadas, estado);
+    }
+
+    _fondo() {
+        const g = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+        g.addColorStop(0, 'rgba(70,30,5,0.25)');
+        g.addColorStop(0.5, 'rgba(0,0,0,0.08)');
+        g.addColorStop(1, 'rgba(70,30,5,0.25)');
+        this.ctx.fillStyle = g;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    _marcadores() {
+        const ctx = this.ctx;
+        [3,5,7,9,12,15].forEach(t => {
+            const x = this.xPos(t);
+            ctx.fillStyle = 'rgba(255,255,255,0.09)';
+            if (t === 12) {
+                [[1.5],[3.5]].forEach(([cy]) => {
+                    ctx.beginPath(); ctx.arc(x, this.yPos(cy), 9, 0, Math.PI*2); ctx.fill();
+                });
+            } else {
+                ctx.beginPath(); ctx.arc(x, this.yPos(2.5), 9, 0, Math.PI*2); ctx.fill();
+            }
+        });
+    }
+
+    _cejuela() {
+        const { ctx, mg } = this;
+        ctx.fillStyle = '#d4c090';
+        ctx.fillRect(mg.izq - 5, mg.arr - 4, 6, this.ah + 8);
+    }
+
+    _trastes() {
+        const { ctx, mg } = this;
+        for (let t = 1; t <= Guitarra.TRASTES; t++) {
+            const x = mg.izq + t * this.dx;
+            ctx.beginPath();
+            ctx.moveTo(x, mg.arr - 3);
+            ctx.lineTo(x, mg.arr + this.ah + 3);
+            ctx.strokeStyle = t === 12
+                ? 'rgba(210,180,110,0.9)'
+                : 'rgba(160,130,80,0.5)';
+            ctx.lineWidth = t === 12 ? 2.5 : 1.5;
+            ctx.stroke();
+        }
+    }
+
+    _cuerdas() {
+        const { ctx, mg } = this;
+        const GROSORES = [2.7,2.2,1.8,1.3,0.9,0.6];
+        const COLS     = ['#c8bfa0','#c8bfa8','#bfba9e','#a8a896','#989886','#888876'];
+        for (let c = 0; c < Guitarra.CUERDAS; c++) {
+            const y = this.yPos(c);
+            ctx.beginPath();
+            ctx.moveTo(mg.izq, y);
+            ctx.lineTo(mg.izq + this.aw, y);
+            ctx.strokeStyle = COLS[c];
+            ctx.lineWidth = GROSORES[c];
+            ctx.stroke();
+        }
+    }
+
+    _etiquetasCuerdas() {
+        const { ctx, mg } = this;
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        for (let c = 0; c < Guitarra.CUERDAS; c++) {
+            ctx.fillStyle = '#bbb';
+            ctx.fillText(Guitarra.NOMBRES_CUERDAS[c], mg.izq - 8, this.yPos(c));
+        }
+    }
+
+    _etiquetasTrastes() {
+        const { ctx, mg } = this;
+        ctx.font = '10px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillStyle = '#666';
+        for (let t = 1; t <= Guitarra.TRASTES; t++) {
+            ctx.fillText(t, this.xPos(t), mg.arr - 10);
+        }
+    }
+
+    _puntos(seleccionadas, estado) {
+        const { ctx } = this;
+        const COLORES = { jugando:'#f0a500', correcto:'#2ecc71', incorrecto:'#e74c3c' };
+        const color = COLORES[estado] || '#f0a500';
+
+        seleccionadas.forEach(({ cuerda, traste }) => {
+            const x = this.xPos(traste);
+            const y = this.yPos(cuerda);
+            const nota = Guitarra.obtenerNota(cuerda, traste);
+
+            ctx.save();
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 14;
+            ctx.beginPath();
+            ctx.arc(x, y, this.r, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            ctx.font = `bold ${Math.round(this.r * 0.78)}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#111';
+            ctx.fillText(nota.nombre, x, y);
+            ctx.restore();
+        });
+    }
+
+    posicionDesdeClick(px, py) {
+        for (let c = 0; c < Guitarra.CUERDAS; c++) {
+            for (let t = 1; t <= Guitarra.TRASTES; t++) {
+                if (Math.hypot(px - this.xPos(t), py - this.yPos(c)) < this.dy * 0.46) {
+                    return { cuerda: c, traste: t };
+                }
+            }
+        }
+        return null;
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+// GestorSeleccion — estado de las notas marcadas (SRP)
+// ══════════════════════════════════════════════════════════════
+class GestorSeleccion {
+    constructor() {
+        this.seleccionadas = [];
+        this.MAX = 4;
+    }
+
+    alternar(cuerda, traste) {
+        const mismo = this.seleccionadas.findIndex(s => s.cuerda === cuerda && s.traste === traste);
+        if (mismo >= 0) {
+            this.seleccionadas.splice(mismo, 1);
+            return true;
+        }
+        this.seleccionadas = this.seleccionadas.filter(s => s.cuerda !== cuerda);
+        if (this.seleccionadas.length < this.MAX) {
+            this.seleccionadas.push({ cuerda, traste });
+            return true;
+        }
+        return false;
+    }
+
+    limpiar()       { this.seleccionadas = []; }
+    estaCompleta()  { return this.seleccionadas.length === this.MAX; }
+
+    midiOrdenados() {
+        return [...this.seleccionadas]
+            .sort((a, b) => a.cuerda - b.cuerda)
+            .map(s => Guitarra.obtenerNota(s.cuerda, s.traste).midi);
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+// GestorAcordes — lista de acordes según modo (SRP)
+// ══════════════════════════════════════════════════════════════
+class GestorAcordes {
+    constructor() {
+        this._lista = this._libres();
+    }
+
+    _libres() {
+        const out = [];
+        TeoríaMusical.NOTAS.forEach(raiz => {
+            ['maj','m','dim'].forEach(tipo => {
+                out.push({ raiz, tipo, notas: TeoríaMusical.notasDeAcorde(raiz, tipo) });
+            });
+        });
+        return out;
+    }
+
+    configurarLibre()                        { this._lista = this._libres(); }
+    configurarEscala(tonalidad, tipoEscala)  { this._lista = TeoríaMusical.acordesDiatonicos(tonalidad, tipoEscala); }
+
+    aleatorio(excluir) {
+        const c = excluir
+            ? this._lista.filter(a => !(a.raiz === excluir.raiz && a.tipo === excluir.tipo))
+            : this._lista;
+        return c[Math.floor(Math.random() * c.length)];
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+// JuegoAcordes — lógica de juego y puntuación (SRP)
+// ══════════════════════════════════════════════════════════════
+class JuegoAcordes {
+    constructor(sel, acordes, audio) {
+        this._sel    = sel;
+        this._acords = acordes;
+        this._audio  = audio;
+        this.acorde  = null;
+        this.estado  = 'esperando';
+        this.ok  = 0;
+        this.mal = 0;
+    }
+
+    siguiente() {
+        this.acorde = this._acords.aleatorio(this.acorde);
+        this._sel.limpiar();
+        this.estado = 'jugando';
+    }
+
+    puedeConfirmar() {
+        return this._sel.estaCompleta() && this.estado === 'jugando';
+    }
+
+    tocarYConfirmar() {
+        if (!this.puedeConfirmar()) return null;
+        const midis = this._sel.midiOrdenados();
+        this._audio.tocarAcorde(midis);
+        const bien = TeoríaMusical.esVoicingValido(midis, this.acorde);
+        if (bien) { this.estado = 'correcto';   this.ok++;  }
+        else       { this.estado = 'incorrecto'; this.mal++; }
+        return bien;
+    }
+
+    volverAJugando() {
+        if (this.estado === 'incorrecto') this.estado = 'jugando';
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+// ControladorUI — DOM, eventos y presentación (SRP + DIP)
+// ══════════════════════════════════════════════════════════════
+class ControladorUI {
+    constructor({ juego, render, sel, acordes }) {
+        this.juego  = juego;
+        this.render = render;
+        this.sel    = sel;
+        this.acordes = acordes;
+        this._bindEventos();
+        this._poblarTonalidades();
+        this._render();
+    }
+
+    _bindEventos() {
+        document.getElementById('mastil').addEventListener('click', e => {
+            if (this.juego.estado !== 'jugando') return;
+            const rect = this.render.canvas.getBoundingClientRect();
+            const escX = this.render.canvas.width  / rect.width;
+            const escY = this.render.canvas.height / rect.height;
+            const pos  = this.render.posicionDesdeClick(
+                (e.clientX - rect.left) * escX,
+                (e.clientY - rect.top)  * escY
+            );
+            if (!pos) return;
+            this.sel.alternar(pos.cuerda, pos.traste);
+            this._render();
+        });
+
+        document.getElementById('btn-tocar').addEventListener('click', () => {
+            const bien = this.juego.tocarYConfirmar();
+            this._render();
+            if (bien === true) {
+                setTimeout(() => { this.juego.siguiente(); this._render(); }, 1600);
+            } else if (bien === false) {
+                setTimeout(() => { this.juego.volverAJugando(); this._render(); }, 1600);
+            }
+        });
+
+        document.getElementById('btn-limpiar').addEventListener('click', () => {
+            if (this.juego.estado === 'correcto') return;
+            this.sel.limpiar();
+            this.juego.volverAJugando();
+            this._render();
+        });
+
+        document.getElementById('btn-siguiente').addEventListener('click', () => {
+            this.juego.siguiente();
+            document.getElementById('pista').style.display = 'none';
+            this._render();
+        });
+
+        document.getElementById('btn-pista').addEventListener('click', () => {
+            this._mostrarPista();
+        });
+
+        document.getElementById('selector-modo').addEventListener('change', () => {
+            this._actualizarModo();
+        });
+
+        ['selector-tonalidad','selector-escala'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => {
+                if (document.getElementById('selector-modo').value === 'escala') {
+                    this._actualizarModo();
+                }
+            });
+        });
+    }
+
+    _poblarTonalidades() {
+        const sel = document.getElementById('selector-tonalidad');
+        TeoríaMusical.NOTAS.forEach(n => {
+            const opt = document.createElement('option');
+            opt.value = opt.textContent = n;
+            sel.appendChild(opt);
+        });
+    }
+
+    _actualizarModo() {
+        const modo  = document.getElementById('selector-modo').value;
+        const tonal = document.getElementById('selector-tonalidad').value;
+        const escala = document.getElementById('selector-escala').value;
+        document.getElementById('controles-escala').style.display =
+            modo === 'escala' ? 'inline' : 'none';
+        if (modo === 'escala') this.acordes.configurarEscala(tonal, escala);
+        else this.acordes.configurarLibre();
+        this.juego.siguiente();
+        document.getElementById('pista').style.display = 'none';
+        this._render();
+    }
+
+    _mostrarPista() {
+        if (!this.juego.acorde) return;
+        const { raiz, tipo, notas } = this.juego.acorde;
+        const nom = `${raiz}${tipo === 'maj' ? '' : tipo}`;
+        const pistaEl = document.getElementById('pista');
+        pistaEl.style.display = 'block';
+        pistaEl.textContent =
+            `💡 ${nom} (${TeoríaMusical.NOMBRE_TIPO[tipo]}): ` +
+            `las notas son ${notas.join(' - ')}. ` +
+            `Selecciona estas 3 notas en 4 cuerdas distintas (una nota se repite en otra octava).`;
+    }
+
+    _render() {
+        this.render.dibujar(this.sel.seleccionadas, this.juego.estado);
+        this._actualizarAcorde();
+        this._actualizarBotones();
+        this._actualizarFeedback();
+        this._actualizarPuntuacion();
+        this._actualizarInfoNotas();
+    }
+
+    _actualizarAcorde() {
+        const a = this.juego.acorde;
+        if (!a) return;
+        const nom = `${a.raiz}${a.tipo === 'maj' ? '' : a.tipo}`;
+        document.getElementById('nombre-acorde').textContent = nom;
+        document.getElementById('descripcion-acorde').textContent =
+            `${TeoríaMusical.NOMBRE_TIPO[a.tipo]} — ${a.notas.join(' · ')}`;
+    }
+
+    _actualizarBotones() {
+        document.getElementById('btn-tocar').disabled = !this.juego.puedeConfirmar();
+    }
+
+    _actualizarFeedback() {
+        const el = document.getElementById('feedback');
+        const mapa = {
+            correcto:   { t: '✓ ¡Correcto! Pasando al siguiente...', c: 'correcto' },
+            incorrecto: { t: '✗ No es ese acorde, intenta de nuevo', c: 'incorrecto' },
+        };
+        const info = mapa[this.juego.estado];
+        el.textContent = info ? info.t : '';
+        el.className   = info ? info.c : '';
+    }
+
+    _actualizarPuntuacion() {
+        document.getElementById('cnt-ok').textContent  = this.juego.ok;
+        document.getElementById('cnt-mal').textContent = this.juego.mal;
+    }
+
+    _actualizarInfoNotas() {
+        const notas = [...this.sel.seleccionadas]
+            .sort((a, b) => a.cuerda - b.cuerda)
+            .map(s => Guitarra.obtenerNota(s.cuerda, s.traste).nombre);
+        document.getElementById('texto-notas').textContent =
+            notas.length ? `${notas.join(' — ')} (${notas.length}/4)` : '—';
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+// Bootstrap — composición de dependencias (DIP)
+// ══════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+    const audio  = new MotorAudio();
+    const sel    = new GestorSeleccion();
+    const acordes = new GestorAcordes();
+    const render = new RenderizadorMastil(document.getElementById('mastil'));
+    const juego  = new JuegoAcordes(sel, acordes, audio);
+    new ControladorUI({ juego, render, sel, acordes });
+});
+</script>
+</body>
+</html>
