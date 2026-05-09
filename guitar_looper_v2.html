@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guitar Looper</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#111;color:#ddd;font-family:system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+#app{padding:1rem;max-width:700px;margin:0 auto}
+
+/* ── top bar ── */
+.topbar{display:flex;align-items:center;gap:12px;margin-bottom:1rem;flex-wrap:wrap}
+.title{font-size:12px;letter-spacing:2px;color:#555;text-transform:uppercase;flex:1}
+.bpm-group{display:flex;align-items:center;gap:6px;font-size:12px;color:#666}
+.bpm-group input{width:80px;accent-color:#66BB6A}
+.bpm-v{font-weight:600;color:#aaa;min-width:28px}
+.sig-sel{font-size:12px;padding:3px 6px;border-radius:5px;border:1px solid #333;background:#1a1a1a;color:#aaa;cursor:pointer}
+.metro-btn{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;border:1px solid #333;background:#1a1a1a;cursor:pointer;font-size:12px;color:#777;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.metro-btn.on{border-color:#66BB6A;color:#66BB6A}
+.metro-btn.muted{border-color:#444;color:#444}
+.metro-dot{width:8px;height:8px;border-radius:50%;background:currentColor;transition:opacity .05s}
+.metro-dot.flash{opacity:1!important}
+
+/* ── main button ── */
+.btn-wrap{display:flex;flex-direction:column;align-items:center;margin:1rem 0}
+.main-btn{width:150px;height:150px;border-radius:50%;border:5px solid #444;cursor:pointer;font-size:13px;font-weight:700;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;transition:transform .1s,background .2s,border-color .2s;background:#222;position:relative;outline:none;user-select:none;letter-spacing:2px;-webkit-tap-highlight-color:transparent}
+.main-btn:active{transform:scale(.94)}
+.main-btn.idle{background:#222;border-color:#444}
+.main-btn.rec{background:#7f0000;border-color:#ef5350}
+.main-btn.playing{background:#1a4a20;border-color:#66BB6A}
+.main-btn.overlay{background:#7a3500;border-color:#FFA726}
+.ring{position:absolute;top:-13px;left:-13px;right:-13px;bottom:-13px;border-radius:50%;border:3px solid transparent;pointer-events:none}
+.rec .ring{animation:pr 1s infinite}
+.overlay .ring{animation:po 1s infinite}
+@keyframes pr{0%,100%{border-color:rgba(239,83,80,.8);transform:scale(1)}50%{border-color:rgba(239,83,80,.1);transform:scale(1.07)}}
+@keyframes po{0%,100%{border-color:rgba(255,167,38,.8);transform:scale(1)}50%{border-color:rgba(255,167,38,.1);transform:scale(1.07)}}
+.btn-icon{font-size:34px;line-height:1}
+.status{font-size:12px;color:#666;margin-top:10px;min-height:18px;text-align:center}
+
+.stop-row{display:flex;justify-content:center;margin-bottom:1rem}
+.stop-btn{font-size:11px;padding:6px 20px;border-radius:20px;border:1px solid #333;background:transparent;color:#666;cursor:pointer;display:none;letter-spacing:1px}
+.stop-btn.show{display:inline-block}
+
+/* ── waveform / DAW view ── */
+.daw-wrap{background:#0a0a0a;border:1px solid #222;border-radius:8px;overflow:hidden;margin-bottom:.8rem;position:relative;user-select:none}
+.daw-ruler{height:20px;background:#161616;border-bottom:1px solid #222;position:relative}
+#ruler-cv{width:100%;height:20px;display:block}
+.daw-main{position:relative;height:90px}
+#wave-cv{position:absolute;top:0;left:0;width:100%;height:90px;display:block}
+#trim-cv{position:absolute;top:0;left:0;width:100%;height:90px;display:block;cursor:col-resize}
+.daw-playhead{position:absolute;top:0;width:2px;background:rgba(255,255,255,.7);height:100%;pointer-events:none;display:none}
+
+/* ── tracks ── */
+.tracks-lbl{font-size:10px;color:#444;letter-spacing:2px;text-transform:uppercase;margin-bottom:.5rem}
+.tracks{display:flex;flex-direction:column;gap:5px}
+.track{display:flex;align-items:center;gap:8px;border:1px solid #1e1e1e;border-radius:6px;padding:6px 10px;background:#161616}
+.t-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.t-name{font-size:11px;color:#666;min-width:52px}
+.t-wave{flex:1;height:32px}
+.tbtn{font-size:10px;padding:3px 9px;border-radius:5px;border:1px solid #2a2a2a;background:transparent;cursor:pointer;color:#888;-webkit-tap-highlight-color:transparent}
+.tbtn:active{background:#222}
+.tbtn.muted{color:#444;border-color:#1e1e1e}
+.empty{font-size:12px;color:#444;text-align:center;padding:1.5rem;border:1px dashed #222;border-radius:6px}
+
+/* trim handles */
+.trim-hint{font-size:10px;color:#444;text-align:center;margin-bottom:.5rem;display:none}
+.trim-hint.show{display:block}
+.countin-btn{font-size:11px;padding:5px 16px;border-radius:20px;border:1px solid #333;background:transparent;color:#666;cursor:pointer;letter-spacing:1px;margin-top:8px;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.countin-btn:disabled{color:#333;border-color:#222;cursor:default}
+.countin-btn.active{border-color:#FFA726;color:#FFA726}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar">
+    <span class="title">🎸 Looper</span>
+    <div class="bpm-group">
+      <span>BPM</span>
+      <input type="range" id="bpm-sl" min="40" max="240" value="120" step="1">
+      <span class="bpm-v" id="bpm-v">120</span>
+    </div>
+    <select class="sig-sel" id="sig-sel">
+      <option value="4">4/4</option>
+      <option value="3">3/4</option>
+      <option value="2">2/2</option>
+    </select>
+    <button class="metro-btn" id="metro-btn">
+      <span class="metro-dot" id="metro-dot"></span>
+      <span id="metro-lbl">Metrónomo</span>
+    </button>
+  </div>
+
+  <div class="btn-wrap">
+    <button class="main-btn idle" id="main-btn">
+      <div class="ring"></div>
+      <span class="btn-icon" id="btn-icon">⏺</span>
+      <span id="btn-lbl">GRABAR</span>
+    </button>
+    <div class="status" id="status">Presiona para grabar el loop principal</div>
+    <button class="countin-btn" id="countin-btn" title="Cuenta 3 tiempos y graba automáticamente">1 · 2 · 3 · REC</button>
+  </div>
+
+  <div class="stop-row">
+    <button class="stop-btn" id="stop-btn">⏹ Detener todo</button>
+  </div>
+
+  <div class="daw-wrap" id="daw-wrap">
+    <div class="daw-ruler"><canvas id="ruler-cv" height="20"></canvas></div>
+    <div class="daw-main">
+      <canvas id="wave-cv" height="90"></canvas>
+      <canvas id="trim-cv" height="90"></canvas>
+      <div class="daw-playhead" id="playhead"></div>
+    </div>
+  </div>
+  <div class="trim-hint" id="trim-hint">Arrastra los marcadores ◀ ▶ para recortar el loop</div>
+
+  <div class="tracks-lbl">Pistas</div>
+  <div class="tracks" id="tracks"><div class="empty">Aún no hay pistas grabadas</div></div>
+</div>
+
+<script>
+// ── Estado ───────────────────────────────────────────────────────
+const ST = {IDLE:'idle',REC:'rec',PLAYING:'playing',OVERLAY:'overlay'};
+let state = ST.IDLE;
+let bpm = 120, beatsPerBar = 4;
+
+// ── Audio ────────────────────────────────────────────────────────
+let audioCtx = null;
+let micSrc = null, recDest = null, visAn = null;
+let metroGain = null;
+let mediaStream = null, mediaRecorder = null, recChunks = [];
+
+// ── Loop ─────────────────────────────────────────────────────────
+let loopStart = 0, loopDuration = 0;
+let trimStart = 0, trimEnd = 0;       // en segundos, dentro del buffer
+let mainBuffer = null;                // buffer del loop principal (para trim)
+let layers = [], activeSrcs = [];
+let recStartPhase = 0; // fase (segundos) dentro del loop donde comenzó el overlay
+
+// ── Metro ────────────────────────────────────────────────────────
+let metroOn = false, metroMuted = false;
+let metroTimer = null, metroBeat = 0;
+
+// ── Count-in ─────────────────────────────────────────────────────
+let countInActive = false, countInTimer = null;
+
+// ── Trim drag ────────────────────────────────────────────────────
+let dragging = null; // 'start' | 'end' | null
+let trimCvW = 1;
+
+// ── Live record waveform ─────────────────────────────────────────
+let liveDrawing = false, animFr = null;
+let liveColor = '#ef5350';
+let phAnim = null;
+
+// ── DOM ──────────────────────────────────────────────────────────
+const mainBtn  = document.getElementById('main-btn');
+const btnIcon  = document.getElementById('btn-icon');
+const btnLbl   = document.getElementById('btn-lbl');
+const statusEl = document.getElementById('status');
+const stopBtn  = document.getElementById('stop-btn');
+const tracksEl = document.getElementById('tracks');
+const metroBt  = document.getElementById('metro-btn');
+const metroDt  = document.getElementById('metro-dot');
+const metroLbl = document.getElementById('metro-lbl');
+const bpmSl    = document.getElementById('bpm-sl');
+const bpmVEl   = document.getElementById('bpm-v');
+const sigSel   = document.getElementById('sig-sel');
+const rulCv    = document.getElementById('ruler-cv');
+const waveCv   = document.getElementById('wave-cv');
+const trimCv   = document.getElementById('trim-cv');
+const playhead = document.getElementById('playhead');
+const trimHint   = document.getElementById('trim-hint');
+const countInBtn = document.getElementById('countin-btn');
+const rulCtx   = rulCv.getContext('2d');
+const waveCtx  = waveCv.getContext('2d');
+const trimCtx  = trimCv.getContext('2d');
+
+function resizeCvs() {
+  const w = waveCv.offsetWidth || 640;
+  trimCvW = w;
+  [rulCv, waveCv, trimCv].forEach(c => { c.width = w; });
+  rulCv.height = 20; waveCv.height = 90; trimCv.height = 90;
+  if (mainBuffer) { drawMainWave(); drawRuler(); drawTrimOverlay(); }
+}
+window.addEventListener('resize', () => { resizeCvs(); });
+setTimeout(resizeCvs, 80);
+
+// ── BPM / sig ────────────────────────────────────────────────────
+bpmSl.addEventListener('input', () => {
+  bpm = parseInt(bpmSl.value); bpmVEl.textContent = bpm;
+  if (metroOn) { stopMetro(); startMetro(); }
+  if (mainBuffer) drawRuler();
+});
+sigSel.addEventListener('change', () => {
+  beatsPerBar = parseInt(sigSel.value);
+  if (metroOn) { stopMetro(); startMetro(); }
+  if (mainBuffer) drawRuler();
+});
+
+// ── Audio init ───────────────────────────────────────────────────
+function initAudio() {
+  if (audioCtx) { if (audioCtx.state==='suspended') audioCtx.resume(); return; }
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  metroGain = audioCtx.createGain();
+  metroGain.gain.value = 1;
+  metroGain.connect(audioCtx.destination);
+  recDest = audioCtx.createMediaStreamDestination();
+}
+
+async function initMic() {
+  if (mediaStream) return true;
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false
+      },
+      video: false
+    });
+    initAudio();
+    micSrc = audioCtx.createMediaStreamSource(mediaStream);
+    visAn = audioCtx.createAnalyser(); visAn.fftSize = 1024;
+    micSrc.connect(visAn);
+    micSrc.connect(recDest);
+    return true;
+  } catch(e) { setStatus('⚠️ Sin acceso al micrófono'); return false; }
+}
+
+// ── Metrónomo ────────────────────────────────────────────────────
+function playClick(first) {
+  if (!audioCtx || metroMuted) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(metroGain);
+  o.frequency.value = first ? 1200 : 880;
+  g.gain.setValueAtTime(0.4, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.06);
+  o.start(); o.stop(audioCtx.currentTime + 0.07);
+}
+
+function flashDot() {
+  metroDt.classList.add('flash');
+  setTimeout(()=>metroDt.classList.remove('flash'), 80);
+}
+
+function startMetro() {
+  initAudio(); metroOn = true; metroBeat = 0; updateMetroUI();
+  const ms = 60000 / bpm;
+  const tick = () => {
+    playClick(metroBeat === 0); flashDot();
+    metroBeat = (metroBeat + 1) % beatsPerBar;
+    metroTimer = setTimeout(tick, ms);
+  };
+  tick();
+}
+
+function stopMetro() {
+  clearTimeout(metroTimer); metroTimer = null; metroOn = false; updateMetroUI();
+}
+
+function muteMetro(m) {
+  metroMuted = m;
+  if (metroGain) metroGain.gain.value = m ? 0 : 1;
+  updateMetroUI();
+}
+
+function updateMetroUI() {
+  if (!metroOn) { metroBt.className='metro-btn'; metroLbl.textContent='Metrónomo'; }
+  else if (metroMuted) { metroBt.className='metro-btn muted'; metroLbl.textContent='Muteado'; }
+  else { metroBt.className='metro-btn on'; metroLbl.textContent='Metrónomo'; }
+}
+
+metroBt.addEventListener('click', () => {
+  if (state===ST.REC || state===ST.OVERLAY) return;
+  if (metroOn) { stopMetro(); metroMuted=false; if(metroGain) metroGain.gain.value=1; }
+  else { metroMuted=false; if(metroGain) metroGain.gain.value=1; startMetro(); }
+});
+
+// ── Grabación ────────────────────────────────────────────────────
+function startRec() {
+  recChunks = [];
+  const opts = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+    ? {mimeType:'audio/webm;codecs=opus'} : {};
+  mediaRecorder = new MediaRecorder(recDest.stream, opts);
+  mediaRecorder.ondataavailable = e => { if(e.data&&e.data.size>0) recChunks.push(e.data); };
+  mediaRecorder.start();
+}
+
+function stopRec() {
+  return new Promise(res => {
+    mediaRecorder.onstop = () => res(new Blob(recChunks,{type:mediaRecorder.mimeType||'audio/webm'}));
+    mediaRecorder.stop();
+  });
+}
+
+async function decodeBlob(blob) {
+  const ab = await blob.arrayBuffer();
+  return new Promise((res,rej) => audioCtx.decodeAudioData(ab,res,rej));
+}
+
+// ── Playback ─────────────────────────────────────────────────────
+function playLayer(buf, offsetSecs, lStart, lEnd) {
+  const dur = lEnd - lStart;
+  if (dur <= 0) return null;
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  src.loopStart = lStart; src.loopEnd = lEnd;
+  src.connect(audioCtx.destination);
+  const off = lStart + (offsetSecs % dur);
+  src.start(0, off);
+  return src;
+}
+
+function stopAllSrcs() {
+  activeSrcs.forEach(s=>{ try{s.stop();}catch(e){} });
+  activeSrcs = [];
+}
+
+function restartLayers() {
+  stopAllSrcs();
+  if (!audioCtx || trimEnd <= trimStart) return;
+  const dur = trimEnd - trimStart;
+  const elapsed = (audioCtx.currentTime - loopStart) % dur;
+  layers.forEach(l => {
+    if (!l.muted && l.buffer) {
+      // capas alineadas usan su propio rango (0 → buf.duration); la principal usa trimStart/trimEnd
+      const lS = l.aligned ? 0 : trimStart;
+      const lE = l.aligned ? l.buffer.duration : trimEnd;
+      const s = playLayer(l.buffer, elapsed, lS, lE);
+      if (s) activeSrcs.push(s);
+    }
+  });
+}
+
+// ── Visualizador live ────────────────────────────────────────────
+// Acumulamos muestras para dibujo tipo DAW (scroll)
+let liveChunks = [];   // Float32Arrays
+let liveSampleRate = 44100;
+
+function startLiveDraw(color) {
+  liveColor = color || '#ef5350';
+  liveChunks = []; liveDrawing = true;
+  const proc = audioCtx.createScriptProcessor(2048, 1, 1);
+  proc.onaudioprocess = e => {
+    if (!liveDrawing) return;
+    const d = e.inputBuffer.getChannelData(0);
+    liveChunks.push(new Float32Array(d));
+  };
+  visAn.connect(proc); proc.connect(audioCtx.destination);
+  window._liveProc = proc;
+  liveSampleRate = audioCtx.sampleRate;
+  drawLiveLoop();
+}
+
+function stopLiveDraw() {
+  liveDrawing = false;
+  cancelAnimationFrame(animFr);
+  if (window._liveProc) {
+    try { window._liveProc.disconnect(); } catch(e){}
+    window._liveProc = null;
+  }
+}
+
+function drawLiveLoop() {
+  if (!liveDrawing) return;
+  animFr = requestAnimationFrame(drawLiveLoop);
+  const W = waveCv.width, H = 90;
+  waveCtx.clearRect(0,0,W,H);
+  waveCtx.fillStyle = '#0a0a0a'; waveCtx.fillRect(0,0,W,H);
+
+  // centro
+  waveCtx.strokeStyle = '#1e1e1e'; waveCtx.lineWidth = 1;
+  waveCtx.beginPath(); waveCtx.moveTo(0,H/2); waveCtx.lineTo(W,H/2); waveCtx.stroke();
+
+  // juntar todos los chunks
+  let total = liveChunks.reduce((a,c)=>a+c.length, 0);
+  if (total === 0) return;
+  const all = new Float32Array(total);
+  let pos = 0; liveChunks.forEach(c=>{ all.set(c,pos); pos+=c.length; });
+
+  // Mostrar últimos N segundos (scroll)
+  const showSecs = 8;
+  const showSamples = Math.min(all.length, Math.floor(liveSampleRate * showSecs));
+  const slice = all.slice(all.length - showSamples);
+
+  waveCtx.strokeStyle = liveColor; waveCtx.lineWidth = 1.2; waveCtx.beginPath();
+  const step = slice.length / W;
+  for (let i = 0; i < W; i++) {
+    let max = 0;
+    const s = Math.floor(i*step), e2 = Math.floor((i+1)*step);
+    for (let j=s;j<e2;j++) { const v=Math.abs(slice[j]||0); if(v>max) max=v; }
+    const h = max*(H/2-4);
+    if (i===0) waveCtx.moveTo(i, H/2-h); else waveCtx.lineTo(i, H/2-h);
+  }
+  waveCtx.stroke();
+  // Mirror
+  waveCtx.beginPath();
+  for (let i = 0; i < W; i++) {
+    let max = 0;
+    const s = Math.floor(i*step), e2 = Math.floor((i+1)*step);
+    for (let j=s;j<e2;j++) { const v=Math.abs(slice[j]||0); if(v>max) max=v; }
+    const h = max*(H/2-4);
+    if (i===0) waveCtx.moveTo(i, H/2+h); else waveCtx.lineTo(i, H/2+h);
+  }
+  waveCtx.stroke();
+}
+
+// ── Waveform del loop principal (DAW) ────────────────────────────
+function drawMainWave(color) {
+  if (!mainBuffer) return;
+  const data = mainBuffer.getChannelData(0);
+  const W = waveCv.width, H = 90;
+  waveCtx.clearRect(0,0,W,H);
+  waveCtx.fillStyle = '#0a0a0a'; waveCtx.fillRect(0,0,W,H);
+  waveCtx.strokeStyle = '#1e1e1e'; waveCtx.lineWidth=1;
+  waveCtx.beginPath(); waveCtx.moveTo(0,H/2); waveCtx.lineTo(W,H/2); waveCtx.stroke();
+
+  const c = color || '#ef5350';
+  const step = Math.max(1, Math.floor(data.length / W));
+  // fill
+  waveCtx.fillStyle = c.replace(')', ',.15)').replace('rgb','rgba');
+  waveCtx.beginPath(); waveCtx.moveTo(0,H/2);
+  for (let i=0;i<W;i++) {
+    let max=0; for(let j=0;j<step;j++){const v=Math.abs(data[i*step+j]||0);if(v>max)max=v;}
+    waveCtx.lineTo(i, H/2 - max*(H/2-4));
+  }
+  for (let i=W-1;i>=0;i--) {
+    let max=0; for(let j=0;j<step;j++){const v=Math.abs(data[i*step+j]||0);if(v>max)max=v;}
+    waveCtx.lineTo(i, H/2 + max*(H/2-4));
+  }
+  waveCtx.closePath(); waveCtx.fill();
+  // outline top
+  waveCtx.strokeStyle = c; waveCtx.lineWidth = 1.2; waveCtx.beginPath();
+  for (let i=0;i<W;i++) {
+    let max=0; for(let j=0;j<step;j++){const v=Math.abs(data[i*step+j]||0);if(v>max)max=v;}
+    const y = H/2 - max*(H/2-4);
+    i===0?waveCtx.moveTo(i,y):waveCtx.lineTo(i,y);
+  }
+  waveCtx.stroke();
+  // outline bottom
+  waveCtx.beginPath();
+  for (let i=0;i<W;i++) {
+    let max=0; for(let j=0;j<step;j++){const v=Math.abs(data[i*step+j]||0);if(v>max)max=v;}
+    const y = H/2 + max*(H/2-4);
+    i===0?waveCtx.moveTo(i,y):waveCtx.lineTo(i,y);
+  }
+  waveCtx.stroke();
+}
+
+// ── Ruler (líneas de beat) ───────────────────────────────────────
+function drawRuler() {
+  const dur = trimEnd - trimStart;
+  if (!dur) return;
+  const W = rulCv.width, H = 20;
+  rulCtx.clearRect(0,0,W,H);
+  rulCtx.fillStyle='#161616'; rulCtx.fillRect(0,0,W,H);
+  const beatDur = 60/bpm;
+  let t = 0; let beat = 0;
+  while (t < dur) {
+    const x = (t/dur)*W;
+    const isBar = beat%beatsPerBar===0;
+    rulCtx.strokeStyle = isBar?'#555':'#2a2a2a';
+    rulCtx.lineWidth = isBar?1.5:.8;
+    rulCtx.beginPath(); rulCtx.moveTo(x,isBar?0:10); rulCtx.lineTo(x,H); rulCtx.stroke();
+    if (isBar) {
+      rulCtx.fillStyle='#555'; rulCtx.font='9px system-ui';
+      rulCtx.fillText((beat/beatsPerBar+1)+'', x+2, 10);
+    }
+    t += beatDur; beat++;
+  }
+}
+
+// ── Trim overlay ─────────────────────────────────────────────────
+function drawTrimOverlay() {
+  const dur = loopDuration; if (!dur) return;
+  const W = trimCv.width, H = 90;
+  trimCtx.clearRect(0,0,W,H);
+
+  const sx = (trimStart/dur)*W;
+  const ex = (trimEnd/dur)*W;
+
+  // dim antes y después
+  trimCtx.fillStyle='rgba(0,0,0,.55)';
+  trimCtx.fillRect(0,0,sx,H);
+  trimCtx.fillRect(ex,0,W-ex,H);
+
+  // líneas de beat dentro del trim
+  const beatDur = 60/bpm;
+  let t = trimStart; let beat = 0;
+  while (t < trimEnd) {
+    const x = ((t-trimStart)/(trimEnd-trimStart))*(ex-sx)+sx;
+    const isBar = beat%beatsPerBar===0;
+    trimCtx.strokeStyle = isBar?'rgba(255,255,255,.35)':'rgba(255,255,255,.1)';
+    trimCtx.lineWidth = isBar?1.2:.6;
+    trimCtx.beginPath(); trimCtx.moveTo(x,0); trimCtx.lineTo(x,H); trimCtx.stroke();
+    t += beatDur; beat++;
+  }
+
+  // handle inicio
+  trimCtx.fillStyle='#66BB6A';
+  trimCtx.fillRect(sx,0,2,H);
+  trimCtx.fillStyle='#66BB6A';
+  drawHandle(trimCtx, sx, H/2, 'right');
+
+  // handle fin
+  trimCtx.fillStyle='#FFA726';
+  trimCtx.fillRect(ex-2,0,2,H);
+  drawHandle(trimCtx, ex, H/2, 'left');
+}
+
+function drawHandle(ctx, x, y, side) {
+  const w=10,h=20;
+  ctx.beginPath();
+  if(side==='right'){ctx.moveTo(x,y-h/2);ctx.lineTo(x+w,y-h/2);ctx.lineTo(x+w,y+h/2);ctx.lineTo(x,y+h/2);}
+  else{ctx.moveTo(x,y-h/2);ctx.lineTo(x-w,y-h/2);ctx.lineTo(x-w,y+h/2);ctx.lineTo(x,y+h/2);}
+  ctx.closePath(); ctx.fill();
+}
+
+// ── Trim drag ────────────────────────────────────────────────────
+function getRelX(e) {
+  const r = trimCv.getBoundingClientRect();
+  return ((e.touches?e.touches[0].clientX:e.clientX) - r.left) / r.width;
+}
+
+trimCv.addEventListener('mousedown', onTrimDown);
+trimCv.addEventListener('touchstart', onTrimDown, {passive:false});
+
+function onTrimDown(e) {
+  if (!loopDuration) return;
+  e.preventDefault();
+  const rx = getRelX(e);
+  const sx = trimStart/loopDuration, ex = trimEnd/loopDuration;
+  if (Math.abs(rx-sx)<.03) dragging='start';
+  else if (Math.abs(rx-ex)<.03) dragging='end';
+}
+
+window.addEventListener('mousemove', onTrimMove);
+window.addEventListener('touchmove', onTrimMove, {passive:false});
+function onTrimMove(e) {
+  if (!dragging||!loopDuration) return;
+  e.preventDefault();
+  const rx = Math.max(0,Math.min(1,getRelX(e)));
+  const t = rx * loopDuration;
+  const minLen = 60/bpm; // mínimo 1 beat
+  if (dragging==='start') {
+    trimStart = Math.min(t, trimEnd-minLen);
+    trimStart = Math.max(0, trimStart);
+  } else {
+    trimEnd = Math.max(t, trimStart+minLen);
+    trimEnd = Math.min(loopDuration, trimEnd);
+  }
+  drawTrimOverlay(); drawRuler();
+  if (state===ST.PLAYING||state===ST.OVERLAY) restartLayers();
+}
+
+window.addEventListener('mouseup', ()=>{dragging=null;});
+window.addEventListener('touchend', ()=>{dragging=null;});
+
+// ── Playhead ─────────────────────────────────────────────────────
+function startPlayhead() {
+  cancelAnimationFrame(phAnim);
+  playhead.style.display='block';
+  const W = waveCv.width;
+  const tick = () => {
+    if (!audioCtx||!loopDuration) return;
+    const dur = trimEnd-trimStart;
+    const elapsed = ((audioCtx.currentTime-loopStart)%dur)/dur;
+    const sx = (trimStart/loopDuration)*W;
+    const ex = (trimEnd/loopDuration)*W;
+    playhead.style.left = (sx + elapsed*(ex-sx)) + 'px';
+    phAnim = requestAnimationFrame(tick);
+  };
+  tick();
+}
+function stopPlayhead() { cancelAnimationFrame(phAnim); playhead.style.display='none'; }
+
+// ── Track UI ─────────────────────────────────────────────────────
+const COLORS = ['#ef5350','#FFA726','#66BB6A','#29B6F6','#AB47BC','#EC407A','#26C6DA'];
+
+function addTrack(layer, idx) {
+  if (tracksEl.querySelector('.empty')) tracksEl.innerHTML='';
+  const row=document.createElement('div'); row.className='track';
+  const dot=document.createElement('div'); dot.className='t-dot'; dot.style.background=layer.color;
+  const nm=document.createElement('span'); nm.className='t-name'; nm.textContent='Pista '+(idx+1);
+  const cv=document.createElement('canvas'); cv.className='t-wave'; cv.width=300; cv.height=32;
+  const mb=document.createElement('button'); mb.className='tbtn'; mb.textContent='Mutear';
+  mb.onclick=()=>{
+    layer.muted=!layer.muted; mb.textContent=layer.muted?'Activar':'Mutear';
+    mb.classList.toggle('muted',layer.muted); restartLayers();
+  };
+  const db=document.createElement('button'); db.className='tbtn'; db.textContent='Borrar';
+  db.onclick=()=>{
+    const i=layers.indexOf(layer); if(i>-1) layers.splice(i,1);
+    row.remove(); if(!layers.length) tracksEl.innerHTML='<div class="empty">Aún no hay pistas grabadas</div>';
+    restartLayers();
+  };
+  row.append(dot,nm,cv,mb,db); tracksEl.appendChild(row);
+  drawTrackWave(layer.buffer, cv, layer.color);
+}
+
+function drawTrackWave(buf, canvas, color) {
+  const data=buf.getChannelData(0);
+  const W=canvas.width,H=canvas.height;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0d0d0d'; ctx.fillRect(0,0,W,H);
+  const step=Math.max(1,Math.floor(data.length/W));
+  ctx.fillStyle=color.replace(')',',0.15)').replace('rgb','rgba');
+  ctx.beginPath(); ctx.moveTo(0,H/2);
+  for(let i=0;i<W;i++){let m=0;for(let j=0;j<step;j++){const v=Math.abs(data[i*step+j]||0);if(v>m)m=v;}ctx.lineTo(i,H/2-m*(H/2-2));}
+  for(let i=W-1;i>=0;i--){let m=0;for(let j=0;j<step;j++){const v=Math.abs(data[i*step+j]||0);if(v>m)m=v;}ctx.lineTo(i,H/2+m*(H/2-2));}
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle=color; ctx.lineWidth=1; ctx.beginPath();
+  for(let i=0;i<W;i++){let m=0;for(let j=0;j<step;j++){const v=Math.abs(data[i*step+j]||0);if(v>m)m=v;}
+    i===0?ctx.moveTo(i,H/2-m*(H/2-2)):ctx.lineTo(i,H/2-m*(H/2-2));} ctx.stroke();
+  ctx.beginPath();
+  for(let i=0;i<W;i++){let m=0;for(let j=0;j<step;j++){const v=Math.abs(data[i*step+j]||0);if(v>m)m=v;}
+    i===0?ctx.moveTo(i,H/2+m*(H/2-2)):ctx.lineTo(i,H/2+m*(H/2-2));} ctx.stroke();
+}
+
+// ── Reset ────────────────────────────────────────────────────────
+function resetAll() {
+  stopAllSrcs(); stopMetro(); stopLiveDraw(); stopPlayhead();
+  cancelAnimationFrame(animFr);
+  waveCtx.clearRect(0,0,waveCv.width,90);
+  trimCtx.clearRect(0,0,trimCv.width,90);
+  rulCtx.clearRect(0,0,rulCv.width,20);
+  layers=[]; mainBuffer=null; loopDuration=0; loopStart=0; trimStart=0; trimEnd=0; recStartPhase=0;
+  tracksEl.innerHTML='<div class="empty">Aún no hay pistas grabadas</div>';
+  state=ST.IDLE; mainBtn.className='main-btn idle';
+  btnIcon.textContent='⏺'; btnLbl.textContent='GRABAR';
+  setStatus('Presiona para grabar el loop principal');
+  stopBtn.classList.remove('show'); trimHint.classList.remove('show');
+  metroMuted=false; if(metroGain) metroGain.gain.value=1; updateMetroUI();
+}
+stopBtn.addEventListener('click', resetAll);
+function setStatus(t){statusEl.textContent=t;}
+
+// ── Main button ──────────────────────────────────────────────────
+mainBtn.addEventListener('click', async ()=>{
+
+  if (state===ST.IDLE) {
+    const ok=await initMic(); if(!ok) return;
+    initAudio();
+    if(metroOn) muteMetro(true);
+    state=ST.REC; mainBtn.className='main-btn rec';
+    btnIcon.textContent='⏹'; btnLbl.textContent='PARAR';
+    setStatus('🔴 Grabando loop principal...');
+    loopStart=audioCtx.currentTime;
+    startRec(); startLiveDraw();
+    stopBtn.classList.add('show');
+    return;
+  }
+
+  if (state===ST.REC) {
+    const blob=await stopRec();
+    stopLiveDraw();
+    loopDuration=audioCtx.currentTime-loopStart;
+    let buf; try{buf=await decodeBlob(blob);}
+    catch(e){setStatus('⚠️ Error de audio'); state=ST.IDLE; mainBtn.className='main-btn idle'; return;}
+    mainBuffer=buf;
+    trimStart=0; trimEnd=loopDuration;
+    const layer={buffer:buf,color:COLORS[0],muted:false};
+    layers.push(layer); addTrack(layer,0);
+    state=ST.PLAYING; mainBtn.className='main-btn playing';
+    btnIcon.textContent='⏺'; btnLbl.textContent='NUEVA CAPA';
+    setStatus('🟢 En bucle — '+loopDuration.toFixed(2)+'s');
+    drawMainWave(COLORS[0]); drawRuler(); drawTrimOverlay();
+    trimHint.classList.add('show');
+    if(metroOn) muteMetro(false);
+    restartLayers(); startPlayhead();
+    return;
+  }
+
+  if (state===ST.PLAYING) {
+    if(metroOn) muteMetro(true);
+    // Captura la fase exacta del loop en que el usuario pulsa grabar
+    const dur = trimEnd - trimStart;
+    recStartPhase = (audioCtx.currentTime - loopStart) % dur;
+    state=ST.OVERLAY; mainBtn.className='main-btn overlay';
+    btnIcon.textContent='⏹'; btnLbl.textContent='PARAR CAPA';
+    setStatus('🟡 Grabando capa '+(layers.length+1)+'...');
+    startRec();
+    startLiveDraw(COLORS[layers.length % COLORS.length]);
+    return;
+  }
+
+  if (state===ST.OVERLAY) {
+    const blob=await stopRec();
+    let rawBuf; try{rawBuf=await decodeBlob(blob);}
+    catch(e){setStatus('⚠️ Error'); state=ST.PLAYING; mainBtn.className='main-btn playing'; return;}
+
+    // Crear buffer alineado al loop principal:
+    // El audio grabado empieza en recStartPhase dentro del loop,
+    // se copia con wrap-around para que quede sincronizado
+    const loopDur = trimEnd - trimStart;
+    const sr = audioCtx.sampleRate;
+    // Frame count sample-exact: usa mainBuffer como referencia para evitar deriva
+    const frameCount = mainBuffer
+      ? Math.round((trimEnd - trimStart) / mainBuffer.duration * mainBuffer.length)
+      : Math.round(loopDur * sr);
+    const nCh = rawBuf.numberOfChannels;
+    const alignedBuf = audioCtx.createBuffer(nCh, frameCount, sr);
+    const phaseFrame = Math.round(recStartPhase * sr);
+    // Crossfade ~10ms en los bordes para evitar clicks/pops al inicio y fin del audio copiado
+    const fadeSamples = Math.min(Math.floor(sr * 0.01), Math.floor(frameCount * 0.05));
+    for (let ch = 0; ch < nCh; ch++) {
+      const srcData = rawBuf.getChannelData(ch);
+      const dstData = alignedBuf.getChannelData(ch);
+      const copyLen = Math.min(srcData.length, frameCount);
+      for (let i = 0; i < copyLen; i++) {
+        dstData[(phaseFrame + i) % frameCount] = srcData[i];
+      }
+      // Fade in al inicio
+      for (let i = 0; i < fadeSamples && i < copyLen; i++) {
+        dstData[(phaseFrame + i) % frameCount] *= i / fadeSamples;
+      }
+      // Fade out al final
+      for (let i = 0; i < fadeSamples && i < copyLen; i++) {
+        const pos = copyLen - fadeSamples + i;
+        if (pos >= 0) dstData[(phaseFrame + pos) % frameCount] *= (fadeSamples - 1 - i) / fadeSamples;
+      }
+    }
+
+    stopLiveDraw();
+    drawMainWave(COLORS[0]); drawRuler(); drawTrimOverlay();
+    const color=COLORS[layers.length%COLORS.length];
+    const layer={buffer:alignedBuf, color, muted:false, aligned:true};
+    layers.push(layer); addTrack(layer,layers.length-1);
+    state=ST.PLAYING; mainBtn.className='main-btn playing';
+    btnIcon.textContent='⏺'; btnLbl.textContent='NUEVA CAPA';
+    setStatus('🟢 En bucle — '+layers.length+' pistas');
+    if(metroOn) muteMetro(false);
+
+    // Añadir la nueva capa en la fase correcta SIN interrumpir las pistas existentes
+    const elapsed = (audioCtx.currentTime - loopStart) % loopDur;
+    const s = playLayer(alignedBuf, elapsed, 0, alignedBuf.duration);
+    if (s) activeSrcs.push(s);
+  }
+});
+
+// ── Spacebar ──────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.code !== 'Space') return;
+  if (e.target !== document.body) return;
+  e.preventDefault();
+  mainBtn.click();
+});
+
+// ── Count-in (1 · 2 · 3 · REC) ───────────────────────────────────
+function cancelCountIn() {
+  clearTimeout(countInTimer);
+  countInActive = false;
+  countInBtn.classList.remove('active');
+  countInBtn.disabled = false;
+  mainBtn.disabled = false;
+  btnIcon.textContent = '⏺'; btnLbl.textContent = 'GRABAR';
+  setStatus('Presiona para grabar el loop principal');
+}
+
+countInBtn.addEventListener('click', async () => {
+  if (state !== ST.IDLE) return;
+  if (countInActive) { cancelCountIn(); return; }
+
+  const ok = await initMic(); if (!ok) return;
+  initAudio();
+  countInActive = true;
+  countInBtn.classList.add('active');
+  countInBtn.disabled = true;
+  mainBtn.disabled = true;
+
+  const ms = 60000 / bpm;
+  const labels = ['1', '2', '3'];
+  let i = 0;
+
+  const tick = () => {
+    playClick(i === 0);
+    flashDot();
+    btnIcon.textContent = labels[i];
+    btnLbl.textContent = '';
+    setStatus('Grabando en ' + (3 - i) + '...');
+    i++;
+    if (i < 3) {
+      countInTimer = setTimeout(tick, ms);
+    } else {
+      countInTimer = setTimeout(() => {
+        countInActive = false;
+        countInBtn.classList.remove('active');
+        countInBtn.disabled = false;
+        mainBtn.disabled = false;
+        btnIcon.textContent = '⏺'; btnLbl.textContent = 'GRABAR';
+        mainBtn.click();
+      }, ms);
+    }
+  };
+  tick();
+});
+</script>
+</body>
+</html>
