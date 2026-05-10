@@ -69,6 +69,13 @@ body{background:#111;color:#ddd;font-family:system-ui,sans-serif;min-height:100v
 .countin-btn{font-size:11px;padding:5px 16px;border-radius:20px;border:1px solid #333;background:transparent;color:#666;cursor:pointer;letter-spacing:1px;margin-top:8px;-webkit-tap-highlight-color:transparent;transition:all .15s}
 .countin-btn:disabled{color:#333;border-color:#222;cursor:default}
 .countin-btn.active{border-color:#FFA726;color:#FFA726}
+.tap-btn{font-size:11px;padding:4px 10px;border-radius:12px;border:1px solid #333;background:#1a1a1a;color:#888;cursor:pointer;letter-spacing:1px;-webkit-tap-highlight-color:transparent;transition:background .1s}
+.tap-btn:active{background:#252525}
+.t-vol{width:52px;accent-color:#66BB6A;cursor:pointer;vertical-align:middle}
+.stop-row{gap:8px}
+.dl-btn{font-size:11px;padding:6px 16px;border-radius:20px;border:1px solid #29B6F6;background:transparent;color:#29B6F6;cursor:pointer;display:none;letter-spacing:1px;transition:opacity .2s}
+.dl-btn.show{display:inline-block}
+.dl-btn:disabled{opacity:.45;cursor:default}
 </style>
 </head>
 <body>
@@ -90,6 +97,7 @@ body{background:#111;color:#ddd;font-family:system-ui,sans-serif;min-height:100v
       <span class="metro-dot" id="metro-dot"></span>
       <span id="metro-lbl">Metrónomo</span>
     </button>
+    <button class="tap-btn" id="tap-btn" title="Toca el ritmo para fijar BPM (o presiona T)">Tap</button>
   </div>
 
   <div class="btn-wrap">
@@ -104,6 +112,7 @@ body{background:#111;color:#ddd;font-family:system-ui,sans-serif;min-height:100v
 
   <div class="stop-row">
     <button class="stop-btn" id="stop-btn">⏹ Detener todo</button>
+    <button class="dl-btn" id="dl-btn">⬇ Descargar mix</button>
   </div>
 
   <div class="daw-wrap" id="daw-wrap">
@@ -120,9 +129,10 @@ body{background:#111;color:#ddd;font-family:system-ui,sans-serif;min-height:100v
   <div class="tracks" id="tracks"><div class="empty">Aún no hay pistas grabadas</div></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
 <script>
 // ── Estado ───────────────────────────────────────────────────────
-const ST = {IDLE:'idle',REC:'rec',PLAYING:'playing',OVERLAY:'overlay'};
+const ST = {IDLE:'idle',REC:'rec',PLAYING:'playing',OVERLAY:'overlay',WAITING:'waiting'};
 let state = ST.IDLE;
 let bpm = 120, beatsPerBar = 4;
 
@@ -138,6 +148,11 @@ let trimStart = 0, trimEnd = 0;       // en segundos, dentro del buffer
 let mainBuffer = null;                // buffer del loop principal (para trim)
 let layers = [], activeSrcs = [];
 let recStartPhase = 0; // fase (segundos) dentro del loop donde comenzó el overlay
+let waitTimer = null;
+let metroNextBeatTime = 0;
+
+// ── Tap tempo ────────────────────────────────────────────────────
+let tapTimes = [];
 
 // ── Metro ────────────────────────────────────────────────────────
 let metroOn = false, metroMuted = false;
@@ -231,16 +246,17 @@ async function initMic() {
 }
 
 // ── Metrónomo ────────────────────────────────────────────────────
-function playClick(first) {
-  if (!audioCtx || metroMuted) return;
+function playClickAt(time, first) {
+  if (!audioCtx) return;
   const o = audioCtx.createOscillator();
   const g = audioCtx.createGain();
   o.connect(g); g.connect(metroGain);
   o.frequency.value = first ? 1200 : 880;
-  g.gain.setValueAtTime(0.4, audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.06);
-  o.start(); o.stop(audioCtx.currentTime + 0.07);
+  g.gain.setValueAtTime(0.4, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + 0.06);
+  o.start(time); o.stop(time + 0.07);
 }
+function playClick(first) { playClickAt(audioCtx.currentTime, first); }
 
 function flashDot() {
   metroDt.classList.add('flash');
@@ -248,14 +264,41 @@ function flashDot() {
 }
 
 function startMetro() {
-  initAudio(); metroOn = true; metroBeat = 0; updateMetroUI();
-  const ms = 60000 / bpm;
-  const tick = () => {
-    playClick(metroBeat === 0); flashDot();
+  if (!audioCtx) initAudio();
+  metroOn = true; metroBeat = 0; updateMetroUI();
+  const beatDur = 60 / bpm;
+  if (loopDuration > 0 && loopStart > 0) {
+    // Alinear al inicio del loop: beat 1 siempre cae en loopStart
+    const elapsed = audioCtx.currentTime - loopStart;
+    const nextIdx = Math.ceil(elapsed / beatDur);
+    metroNextBeatTime = loopStart + nextIdx * beatDur;
+    metroBeat = nextIdx % beatsPerBar;
+  } else {
+    metroNextBeatTime = audioCtx.currentTime;
+  }
+  scheduleMetro();
+}
+
+function scheduleMetro() {
+  if (!metroOn) return;
+  const beatDur = 60 / bpm;
+  while (metroNextBeatTime < audioCtx.currentTime + 0.1) {
+    if (!metroMuted) {
+      let first;
+      if (loopDuration > 0 && loopStart > 0) {
+        // Beat 1 = loopStart; calculado desde el reloj de Web Audio (sin deriva)
+        first = Math.round((metroNextBeatTime - loopStart) / beatDur) % beatsPerBar === 0;
+      } else {
+        first = metroBeat % beatsPerBar === 0;
+      }
+      playClickAt(metroNextBeatTime, first);
+      const d = Math.max(0, (metroNextBeatTime - audioCtx.currentTime) * 1000);
+      setTimeout(flashDot, d);
+    }
     metroBeat = (metroBeat + 1) % beatsPerBar;
-    metroTimer = setTimeout(tick, ms);
-  };
-  tick();
+    metroNextBeatTime += beatDur;
+  }
+  metroTimer = setTimeout(scheduleMetro, 25);
 }
 
 function stopMetro() {
@@ -275,7 +318,7 @@ function updateMetroUI() {
 }
 
 metroBt.addEventListener('click', () => {
-  if (state===ST.REC || state===ST.OVERLAY) return;
+  if (state===ST.REC || state===ST.OVERLAY || state===ST.WAITING) return;
   if (metroOn) { stopMetro(); metroMuted=false; if(metroGain) metroGain.gain.value=1; }
   else { metroMuted=false; if(metroGain) metroGain.gain.value=1; startMetro(); }
 });
@@ -303,13 +346,13 @@ async function decodeBlob(blob) {
 }
 
 // ── Playback ─────────────────────────────────────────────────────
-function playLayer(buf, offsetSecs, lStart, lEnd) {
+function playLayer(buf, offsetSecs, lStart, lEnd, dest) {
   const dur = lEnd - lStart;
   if (dur <= 0) return null;
   const src = audioCtx.createBufferSource();
   src.buffer = buf; src.loop = true;
   src.loopStart = lStart; src.loopEnd = lEnd;
-  src.connect(audioCtx.destination);
+  src.connect(dest || audioCtx.destination);
   const off = lStart + (offsetSecs % dur);
   src.start(0, off);
   return src;
@@ -326,13 +369,14 @@ function restartLayers() {
   const dur = trimEnd - trimStart;
   const elapsed = (audioCtx.currentTime - loopStart) % dur;
   layers.forEach(l => {
-    if (!l.muted && l.buffer) {
-      // capas alineadas usan su propio rango (0 → buf.duration); la principal usa trimStart/trimEnd
-      const lS = l.aligned ? 0 : trimStart;
-      const lE = l.aligned ? l.buffer.duration : trimEnd;
-      const s = playLayer(l.buffer, elapsed, lS, lE);
-      if (s) activeSrcs.push(s);
-    }
+    if (!l.buffer) return;
+    const lS = l.aligned ? 0 : trimStart;
+    const lE = l.aligned ? l.buffer.duration : trimEnd;
+    // Actualizar gain del nodo (respeta mute + volumen)
+    if (l.gainNode) l.gainNode.gain.value = l.muted ? 0 : (l.vol ?? 1);
+    const dest = l.gainNode || audioCtx.destination;
+    const s = playLayer(l.buffer, elapsed, lS, lE, dest);
+    if (s) activeSrcs.push(s);
   });
 }
 
@@ -582,24 +626,42 @@ function stopPlayhead() { cancelAnimationFrame(phAnim); playhead.style.display='
 const COLORS = ['#ef5350','#FFA726','#66BB6A','#29B6F6','#AB47BC','#EC407A','#26C6DA'];
 
 function addTrack(layer, idx) {
+  // Crear GainNode persistente para esta pista
+  layer.vol = 1;
+  layer.gainNode = audioCtx.createGain();
+  layer.gainNode.gain.value = 1;
+  layer.gainNode.connect(audioCtx.destination);
+
   if (tracksEl.querySelector('.empty')) tracksEl.innerHTML='';
   const row=document.createElement('div'); row.className='track';
   const dot=document.createElement('div'); dot.className='t-dot'; dot.style.background=layer.color;
   const nm=document.createElement('span'); nm.className='t-name'; nm.textContent='Pista '+(idx+1);
   const cv=document.createElement('canvas'); cv.className='t-wave'; cv.width=300; cv.height=32;
+
+  // Slider de volumen independiente
+  const vs=document.createElement('input'); vs.type='range'; vs.min=0; vs.max=100; vs.value=100;
+  vs.className='t-vol'; vs.title='Volumen';
+  vs.oninput=()=>{
+    layer.vol = vs.value/100;
+    if (layer.gainNode) layer.gainNode.gain.setTargetAtTime(layer.muted?0:layer.vol, audioCtx.currentTime, 0.01);
+  };
+
   const mb=document.createElement('button'); mb.className='tbtn'; mb.textContent='Mutear';
   mb.onclick=()=>{
     layer.muted=!layer.muted; mb.textContent=layer.muted?'Activar':'Mutear';
-    mb.classList.toggle('muted',layer.muted); restartLayers();
+    mb.classList.toggle('muted',layer.muted);
+    if (layer.gainNode) layer.gainNode.gain.setTargetAtTime(layer.muted?0:layer.vol, audioCtx.currentTime, 0.01);
   };
   const db=document.createElement('button'); db.className='tbtn'; db.textContent='Borrar';
   db.onclick=()=>{
     const i=layers.indexOf(layer); if(i>-1) layers.splice(i,1);
+    if (layer.gainNode) { layer.gainNode.disconnect(); layer.gainNode=null; }
     row.remove(); if(!layers.length) tracksEl.innerHTML='<div class="empty">Aún no hay pistas grabadas</div>';
-    restartLayers();
+    restartLayers(); updateDlBtn();
   };
-  row.append(dot,nm,cv,mb,db); tracksEl.appendChild(row);
+  row.append(dot,nm,cv,vs,mb,db); tracksEl.appendChild(row);
   drawTrackWave(layer.buffer, cv, layer.color);
+  updateDlBtn();
 }
 
 function drawTrackWave(buf, canvas, color) {
@@ -623,7 +685,14 @@ function drawTrackWave(buf, canvas, color) {
 }
 
 // ── Reset ────────────────────────────────────────────────────────
+function updateDlBtn() {
+  const b = document.getElementById('dl-btn');
+  if (b) b.classList.toggle('show', layers.length > 0);
+}
+
 function resetAll() {
+  clearTimeout(waitTimer); waitTimer = null;
+  layers.forEach(l => { if (l.gainNode) { l.gainNode.disconnect(); l.gainNode=null; } });
   stopAllSrcs(); stopMetro(); stopLiveDraw(); stopPlayhead();
   cancelAnimationFrame(animFr);
   waveCtx.clearRect(0,0,waveCv.width,90);
@@ -634,7 +703,7 @@ function resetAll() {
   state=ST.IDLE; mainBtn.className='main-btn idle';
   btnIcon.textContent='⏺'; btnLbl.textContent='GRABAR';
   setStatus('Presiona para grabar el loop principal');
-  stopBtn.classList.remove('show'); trimHint.classList.remove('show');
+  stopBtn.classList.remove('show'); trimHint.classList.remove('show'); updateDlBtn();
   metroMuted=false; if(metroGain) metroGain.gain.value=1; updateMetroUI();
 }
 stopBtn.addEventListener('click', resetAll);
@@ -671,21 +740,38 @@ mainBtn.addEventListener('click', async ()=>{
     setStatus('🟢 En bucle — '+loopDuration.toFixed(2)+'s');
     drawMainWave(COLORS[0]); drawRuler(); drawTrimOverlay();
     trimHint.classList.add('show');
-    if(metroOn) muteMetro(false);
+    // Reiniciar metro sincronizado al loopStart recién establecido
+    if (metroOn) { stopMetro(); metroMuted=false; if(metroGain) metroGain.gain.value=1; startMetro(); }
     restartLayers(); startPlayhead();
     return;
   }
 
+  if (state===ST.WAITING) {
+    clearTimeout(waitTimer); waitTimer=null;
+    state=ST.PLAYING; mainBtn.className='main-btn playing';
+    btnIcon.textContent='⏺'; btnLbl.textContent='NUEVA CAPA';
+    setStatus('🟢 En bucle — '+layers.length+' pistas');
+    return;
+  }
+
   if (state===ST.PLAYING) {
-    if(metroOn) muteMetro(true);
-    // Captura la fase exacta del loop en que el usuario pulsa grabar
+    // Esperar al inicio del siguiente loop para grabar sincronizado
     const dur = trimEnd - trimStart;
-    recStartPhase = (audioCtx.currentTime - loopStart) % dur;
-    state=ST.OVERLAY; mainBtn.className='main-btn overlay';
-    btnIcon.textContent='⏹'; btnLbl.textContent='PARAR CAPA';
-    setStatus('🟡 Grabando capa '+(layers.length+1)+'...');
-    startRec();
-    startLiveDraw(COLORS[layers.length % COLORS.length]);
+    const elapsed = (audioCtx.currentTime - loopStart) % dur;
+    const toNext = dur - elapsed;
+    recStartPhase = 0;
+    state=ST.WAITING; mainBtn.className='main-btn overlay';
+    btnIcon.textContent='⏺'; btnLbl.textContent='ESPERANDO';
+    setStatus('⏳ Grabando al inicio del próximo loop...');
+    waitTimer = setTimeout(() => {
+      if (state !== ST.WAITING) return;
+      if (metroOn) muteMetro(true);
+      state=ST.OVERLAY; mainBtn.className='main-btn overlay';
+      btnIcon.textContent='⏹'; btnLbl.textContent='PARAR CAPA';
+      setStatus('🟡 Grabando capa '+(layers.length+1)+'...');
+      startRec();
+      startLiveDraw(COLORS[layers.length % COLORS.length]);
+    }, toNext * 1000);
     return;
   }
 
@@ -738,18 +824,90 @@ mainBtn.addEventListener('click', async ()=>{
 
     // Añadir la nueva capa en la fase correcta SIN interrumpir las pistas existentes
     const elapsed = (audioCtx.currentTime - loopStart) % loopDur;
-    const s = playLayer(alignedBuf, elapsed, 0, alignedBuf.duration);
+    const s = playLayer(alignedBuf, elapsed, 0, alignedBuf.duration, layer.gainNode);
     if (s) activeSrcs.push(s);
   }
 });
 
-// ── Spacebar ──────────────────────────────────────────────────────
+// ── Spacebar / Tap ────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.code === 'KeyT') { onTap(); return; }
   if (e.code !== 'Space') return;
-  if (e.target !== document.body) return;
   e.preventDefault();
   mainBtn.click();
 });
+
+// ── Tap tempo ─────────────────────────────────────────────────────
+function onTap() {
+  initAudio();
+  const now = Date.now();
+  if (tapTimes.length > 0 && now - tapTimes[tapTimes.length - 1] > 2000) tapTimes = [];
+  tapTimes.push(now);
+  if (tapTimes.length > 8) tapTimes.shift();
+  if (tapTimes.length >= 2) {
+    let sum = 0;
+    for (let i = 1; i < tapTimes.length; i++) sum += tapTimes[i] - tapTimes[i-1];
+    const avg = sum / (tapTimes.length - 1);
+    bpm = Math.max(40, Math.min(240, Math.round(60000 / avg)));
+    bpmSl.value = bpm; bpmVEl.textContent = bpm;
+    if (metroOn) { stopMetro(); startMetro(); }
+    if (mainBuffer) drawRuler();
+  }
+}
+document.getElementById('tap-btn').addEventListener('click', onTap);
+document.getElementById('tap-btn').addEventListener('touchstart', e => { e.preventDefault(); onTap(); }, {passive:false});
+
+// ── Descarga del mix ──────────────────────────────────────────────
+async function downloadMix() {
+  if (!layers.length || !audioCtx) return;
+  const dlBtn = document.getElementById('dl-btn');
+  dlBtn.disabled = true; dlBtn.textContent = '⏳ Procesando...';
+  try {
+    const dur = trimEnd - trimStart;
+    const sr = audioCtx.sampleRate;
+    const frames = Math.round(dur * sr);
+    const offCtx = new OfflineAudioContext(1, frames, sr);
+
+    layers.filter(l => !l.muted && l.buffer).forEach(l => {
+      const lS = l.aligned ? 0 : trimStart;
+      const lE = l.aligned ? l.buffer.duration : trimEnd;
+      const src = offCtx.createBufferSource();
+      src.buffer = l.buffer; src.loop = true;
+      src.loopStart = lS; src.loopEnd = lE;
+      const g = offCtx.createGain();
+      g.gain.value = l.vol ?? 1;
+      src.connect(g); g.connect(offCtx.destination);
+      src.start(0, lS);
+    });
+
+    const rendered = await offCtx.startRendering();
+    const raw = rendered.getChannelData(0);
+
+    // Convertir a Int16 para lamejs
+    const pcm = new Int16Array(raw.length);
+    for (let i = 0; i < raw.length; i++) pcm[i] = Math.max(-32768, Math.min(32767, raw[i] * 32767));
+
+    const enc = new lamejs.Mp3Encoder(1, sr, 128);
+    const parts = []; const blk = 1152;
+    for (let i = 0; i < pcm.length; i += blk) {
+      const buf = enc.encodeBuffer(pcm.subarray(i, i + blk));
+      if (buf.length > 0) parts.push(new Uint8Array(buf));
+    }
+    const tail = enc.flush();
+    if (tail.length > 0) parts.push(new Uint8Array(tail));
+
+    const blob = new Blob(parts, {type: 'audio/mpeg'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'guitar_loop.mp3'; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch(e) {
+    setStatus('⚠️ Error al exportar: ' + e.message);
+  }
+  dlBtn.disabled = false; dlBtn.textContent = '⬇ Descargar mix';
+}
+document.getElementById('dl-btn').addEventListener('click', downloadMix);
 
 // ── Count-in (1 · 2 · 3 · REC) ───────────────────────────────────
 function cancelCountIn() {
