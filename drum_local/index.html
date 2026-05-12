@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drum Looper</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== HEADER ===== -->
+  <header class="cabecera">
+
+    <div class="logo">
+      <span class="logo-icon">🥁</span>
+      <h1>Drum Looper</h1>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- Play / Stop -->
+    <div class="ctrl-grupo">
+      <button id="btn-play" class="btn-play">▶ Play</button>
+      <div id="indicador-play" class="indicador-play"></div>
+      <span class="atajo">Space</span>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- BPM -->
+    <div class="ctrl-grupo">
+      <span class="ctrl-label">BPM</span>
+      <div id="display-bpm" class="display-bpm">120</div>
+      <input type="range" id="slider-bpm" class="slider-bpm" min="40" max="240" value="120">
+      <button id="btn-tap" class="btn-tap">TAP</button>
+      <span class="atajo">T</span>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- Estilo / Preset -->
+    <div class="ctrl-grupo">
+      <span class="ctrl-label">Estilo</span>
+      <select id="select-preset" class="select-preset"></select>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- Compases -->
+    <div class="ctrl-grupo">
+      <span class="ctrl-label">Compases</span>
+      <button id="btn-menos-compas" class="btn-compas">−</button>
+      <span id="display-compases" class="display-compases">4</span>
+      <button id="btn-mas-compas"  class="btn-compas">+</button>
+      <span class="ctrl-label" style="font-size:9px; color:#555">(×4 pasos)</span>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- Acciones -->
+    <div class="ctrl-grupo">
+      <button id="btn-agregar" class="btn-agregar">+ Pista</button>
+      <button id="btn-limpiar" class="btn-limpiar">Limpiar</button>
+    </div>
+
+  </header>
+
+  <!-- ===== BEAT INDICATOR BAR ===== -->
+  <div class="beat-bar">
+    <div class="beats-dots">
+      <span class="beat-label">Beat</span>
+      <div class="beat-dot" id="beat-0"></div>
+      <div class="beat-dot" id="beat-1"></div>
+      <div class="beat-dot" id="beat-2"></div>
+      <div class="beat-dot" id="beat-3"></div>
+    </div>
+  </div>
+
+  <!-- ===== MAIN ===== -->
+  <main class="contenido-principal">
+
+    <!-- Numeración de pasos -->
+    <div class="fila-numeracion">
+      <div class="espaciador-controles"></div>
+      <div id="numeracion-pasos" class="numeracion-pasos"></div>
+    </div>
+
+    <!-- Pistas -->
+    <div id="contenedor-pistas" class="contenedor-pistas"></div>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="pie">
+    <kbd>Space</kbd> Play/Stop &nbsp;·&nbsp;
+    <kbd>T</kbd> Tap Tempo &nbsp;·&nbsp;
+    Click en cuadros para activar/desactivar &nbsp;·&nbsp;
+    M = silenciar pista
+  </footer>
+
+</div>
+
+<!-- Sonidos -->
+<script src="js/sonidos/GestorContextoAudio.js"></script>
+<script src="js/sonidos/SintetizadorDrum.js"></script>
+<script src="js/sonidos/BibliotecaSonidos.js"></script>
+<!-- Secuenciador -->
+<script src="js/secuenciador/PistaRitmo.js"></script>
+<script src="js/secuenciador/SecuenciadorRitmo.js"></script>
+<script src="js/secuenciador/MetronomoTap.js"></script>
+<!-- Datos -->
+<script src="js/datos/PresetsRitmo.js"></script>
+<!-- UI -->
+<script src="js/ui/RenderizadorGrid.js"></script>
+<script src="js/ui/ControladorUI.js"></script>
+<!-- App -->
+<script src="js/AplicacionDrum.js"></script>
+
+</body>
+</html>
