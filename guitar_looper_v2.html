@@ -76,6 +76,16 @@ body{background:#111;color:#ddd;font-family:system-ui,sans-serif;min-height:100v
 .dl-btn{font-size:11px;padding:6px 16px;border-radius:20px;border:1px solid #29B6F6;background:transparent;color:#29B6F6;cursor:pointer;display:none;letter-spacing:1px;transition:opacity .2s}
 .dl-btn.show{display:inline-block}
 .dl-btn:disabled{opacity:.45;cursor:default}
+
+/* ── FX panel ── */
+.track-fx{display:none;flex-wrap:wrap;gap:10px;padding:5px 10px 8px 27px;background:#0d0d0d;border:1px solid #1a1a1a;border-top:none;border-radius:0 0 6px 6px;margin-top:-2px}
+.track-fx.open{display:flex}
+.fx-sec{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.fx-sec-lbl{font-size:9px;letter-spacing:2px;color:#444;text-transform:uppercase;min-width:34px}
+.fx-ctl{display:flex;align-items:center;gap:3px;font-size:9px;color:#555}
+.fx-ctl input[type=range]{width:46px;accent-color:#AB47BC}
+.fx-val{min-width:26px;color:#777;font-size:9px}
+.tbtn.fx-on{border-color:#AB47BC;color:#AB47BC}
 </style>
 </head>
 <body>
@@ -268,13 +278,17 @@ function startMetro() {
   metroOn = true; metroBeat = 0; updateMetroUI();
   const beatDur = 60 / bpm;
   if (loopDuration > 0 && loopStart > 0) {
-    // Alinear al inicio del loop: beat 1 siempre cae en loopStart
+    // Arrancar desde el beat siguiente dentro de la vuelta actual
     const elapsed = audioCtx.currentTime - loopStart;
-    const nextIdx = Math.ceil(elapsed / beatDur);
-    metroNextBeatTime = loopStart + nextIdx * beatDur;
-    metroBeat = nextIdx % beatsPerBar;
+    const loopN = Math.floor(Math.max(0, elapsed) / loopDuration);
+    const curLoopStart = loopStart + loopN * loopDuration;
+    const posInLoop = audioCtx.currentTime - curLoopStart;
+    const nextBeat = Math.ceil(posInLoop / beatDur);
+    metroNextBeatTime = curLoopStart + nextBeat * beatDur;
+    metroBeat = nextBeat;
   } else {
     metroNextBeatTime = audioCtx.currentTime;
+    metroBeat = 0;
   }
   scheduleMetro();
 }
@@ -284,19 +298,27 @@ function scheduleMetro() {
   const beatDur = 60 / bpm;
   while (metroNextBeatTime < audioCtx.currentTime + 0.1) {
     if (!metroMuted) {
-      let first;
-      if (loopDuration > 0 && loopStart > 0) {
-        // Beat 1 = loopStart; calculado desde el reloj de Web Audio (sin deriva)
-        first = Math.round((metroNextBeatTime - loopStart) / beatDur) % beatsPerBar === 0;
-      } else {
-        first = metroBeat % beatsPerBar === 0;
-      }
-      playClickAt(metroNextBeatTime, first);
+      playClickAt(metroNextBeatTime, metroBeat === 0);
       const d = Math.max(0, (metroNextBeatTime - audioCtx.currentTime) * 1000);
       setTimeout(flashDot, d);
     }
-    metroBeat = (metroBeat + 1) % beatsPerBar;
+    metroBeat++;
     metroNextBeatTime += beatDur;
+
+    // Snap al inicio exacto de la próxima vuelta si cae dentro de este intervalo
+    if (loopDuration > 0 && loopStart > 0) {
+      const prev = metroNextBeatTime - beatDur;
+      const elapsed = prev - loopStart;
+      if (elapsed >= 0) {
+        const boundary = loopStart + (Math.floor(elapsed / loopDuration) + 1) * loopDuration;
+        if (boundary > prev && boundary <= metroNextBeatTime) {
+          metroNextBeatTime = boundary; // beat 1 cae exacto en la vuelta
+          metroBeat = 0;
+        }
+      }
+    } else {
+      metroBeat = metroBeat % beatsPerBar;
+    }
   }
   metroTimer = setTimeout(scheduleMetro, 25);
 }
@@ -378,6 +400,47 @@ function restartLayers() {
     const s = playLayer(l.buffer, elapsed, lS, lE, dest);
     if (s) activeSrcs.push(s);
   });
+}
+
+// ── FX: Reverb + Delay por pista ─────────────────────────────────
+function buildImpulse(decaySecs) {
+  const sr = audioCtx.sampleRate;
+  const len = Math.round(sr * decaySecs);
+  const buf = audioCtx.createBuffer(2, len, sr);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = buf.getChannelData(ch);
+    for (let i = 0; i < len; i++) {
+      d[i] = (Math.random() * 2 - 1) * Math.exp(-3 * i / len);
+    }
+  }
+  return buf;
+}
+
+function createFxChain(layer) {
+  const fx = {};
+  fx.delay    = audioCtx.createDelay(1.0);  fx.delay.delayTime.value = 0.25;
+  fx.feedback = audioCtx.createGain();       fx.feedback.gain.value   = 0.3;
+  fx.delayWet = audioCtx.createGain();       fx.delayWet.gain.value   = 0;
+  fx.convolver = audioCtx.createConvolver(); fx.convolver.buffer = buildImpulse(2);
+  fx.reverbWet = audioCtx.createGain();      fx.reverbWet.gain.value  = 0;
+
+  // Delay: gainNode → delay → (feedback loop) + (wet → destination)
+  layer.gainNode.connect(fx.delay);
+  fx.delay.connect(fx.feedback); fx.feedback.connect(fx.delay); // loop
+  fx.delay.connect(fx.delayWet); fx.delayWet.connect(audioCtx.destination);
+
+  // Reverb: gainNode → convolver → wet → destination
+  layer.gainNode.connect(fx.convolver);
+  fx.convolver.connect(fx.reverbWet); fx.reverbWet.connect(audioCtx.destination);
+
+  layer.fx = fx;
+}
+
+function destroyFxChain(layer) {
+  if (!layer.fx) return;
+  const {delay, feedback, delayWet, convolver, reverbWet} = layer.fx;
+  [delay, feedback, delayWet, convolver, reverbWet].forEach(n => { try { n.disconnect(); } catch(e) {} });
+  layer.fx = null;
 }
 
 // ── Visualizador live ────────────────────────────────────────────
@@ -626,40 +689,93 @@ function stopPlayhead() { cancelAnimationFrame(phAnim); playhead.style.display='
 const COLORS = ['#ef5350','#FFA726','#66BB6A','#29B6F6','#AB47BC','#EC407A','#26C6DA'];
 
 function addTrack(layer, idx) {
-  // Crear GainNode persistente para esta pista
+  // GainNode persistente + cadena de FX
   layer.vol = 1;
   layer.gainNode = audioCtx.createGain();
   layer.gainNode.gain.value = 1;
   layer.gainNode.connect(audioCtx.destination);
+  createFxChain(layer);
 
   if (tracksEl.querySelector('.empty')) tracksEl.innerHTML='';
-  const row=document.createElement('div'); row.className='track';
-  const dot=document.createElement('div'); dot.className='t-dot'; dot.style.background=layer.color;
-  const nm=document.createElement('span'); nm.className='t-name'; nm.textContent='Pista '+(idx+1);
-  const cv=document.createElement('canvas'); cv.className='t-wave'; cv.width=300; cv.height=32;
 
-  // Slider de volumen independiente
-  const vs=document.createElement('input'); vs.type='range'; vs.min=0; vs.max=100; vs.value=100;
+  const wrap = document.createElement('div');
+  const row  = document.createElement('div'); row.className='track';
+
+  const dot = document.createElement('div'); dot.className='t-dot'; dot.style.background=layer.color;
+  const nm  = document.createElement('span'); nm.className='t-name'; nm.textContent='Pista '+(idx+1);
+  const cv  = document.createElement('canvas'); cv.className='t-wave'; cv.width=300; cv.height=32;
+
+  const vs = document.createElement('input'); vs.type='range'; vs.min=0; vs.max=100; vs.value=100;
   vs.className='t-vol'; vs.title='Volumen';
-  vs.oninput=()=>{
+  vs.oninput = () => {
     layer.vol = vs.value/100;
     if (layer.gainNode) layer.gainNode.gain.setTargetAtTime(layer.muted?0:layer.vol, audioCtx.currentTime, 0.01);
   };
 
-  const mb=document.createElement('button'); mb.className='tbtn'; mb.textContent='Mutear';
-  mb.onclick=()=>{
-    layer.muted=!layer.muted; mb.textContent=layer.muted?'Activar':'Mutear';
-    mb.classList.toggle('muted',layer.muted);
+  const mb = document.createElement('button'); mb.className='tbtn'; mb.textContent='Mutear';
+  mb.onclick = () => {
+    layer.muted = !layer.muted; mb.textContent = layer.muted?'Activar':'Mutear';
+    mb.classList.toggle('muted', layer.muted);
     if (layer.gainNode) layer.gainNode.gain.setTargetAtTime(layer.muted?0:layer.vol, audioCtx.currentTime, 0.01);
   };
-  const db=document.createElement('button'); db.className='tbtn'; db.textContent='Borrar';
-  db.onclick=()=>{
-    const i=layers.indexOf(layer); if(i>-1) layers.splice(i,1);
+
+  const fxBtn = document.createElement('button'); fxBtn.className='tbtn'; fxBtn.textContent='FX';
+
+  const db = document.createElement('button'); db.className='tbtn'; db.textContent='Borrar';
+  db.onclick = () => {
+    const i = layers.indexOf(layer); if (i>-1) layers.splice(i,1);
+    destroyFxChain(layer);
     if (layer.gainNode) { layer.gainNode.disconnect(); layer.gainNode=null; }
-    row.remove(); if(!layers.length) tracksEl.innerHTML='<div class="empty">Aún no hay pistas grabadas</div>';
+    wrap.remove();
+    if (!layers.length) tracksEl.innerHTML='<div class="empty">Aún no hay pistas grabadas</div>';
     restartLayers(); updateDlBtn();
   };
-  row.append(dot,nm,cv,vs,mb,db); tracksEl.appendChild(row);
+
+  row.append(dot, nm, cv, vs, mb, fxBtn, db);
+
+  // ── Panel FX ──────────────────────────────────────────────────
+  const fxRow = document.createElement('div'); fxRow.className='track-fx';
+
+  // helper: crea un control deslizante etiquetado
+  function fxCtl(label, min, max, val, unit, cb) {
+    const g  = document.createElement('span'); g.className='fx-ctl';
+    const lb = document.createElement('span'); lb.textContent=label+':';
+    const sl = document.createElement('input'); sl.type='range'; sl.min=min; sl.max=max; sl.value=val;
+    const vd = document.createElement('span'); vd.className='fx-val'; vd.textContent=val+unit;
+    sl.oninput = () => { vd.textContent=sl.value+unit; cb(+sl.value); };
+    g.append(lb, sl, vd); return g;
+  }
+
+  // Delay
+  const dlySec = document.createElement('div'); dlySec.className='fx-sec';
+  const dlyLbl = document.createElement('span'); dlyLbl.className='fx-sec-lbl'; dlyLbl.textContent='Delay';
+  dlySec.append(dlyLbl,
+    fxCtl('T',   50, 500, 250, 'ms', v => { if(layer.fx) layer.fx.delay.delayTime.setTargetAtTime(v/1000, audioCtx.currentTime, 0.01); }),
+    fxCtl('Fb',   0,  80,  30,  '%', v => { if(layer.fx) layer.fx.feedback.gain.setTargetAtTime(v/100,   audioCtx.currentTime, 0.01); }),
+    fxCtl('Mix',  0, 100,   0,  '%', v => { if(layer.fx) layer.fx.delayWet.gain.setTargetAtTime(v/100*0.9, audioCtx.currentTime, 0.01); })
+  );
+
+  // Reverb
+  const rvbSec = document.createElement('div'); rvbSec.className='fx-sec';
+  const rvbLbl = document.createElement('span'); rvbLbl.className='fx-sec-lbl'; rvbLbl.textContent='Reverb';
+  rvbSec.append(rvbLbl,
+    fxCtl('Sala', 1, 10, 5, '', v => {
+      if (layer.fx) { const d=0.3+(v-1)/9*3.7; layer.fx.convolver.buffer=buildImpulse(d); }
+    }),
+    fxCtl('Mix', 0, 100, 0, '%', v => { if(layer.fx) layer.fx.reverbWet.gain.setTargetAtTime(v/100*0.8, audioCtx.currentTime, 0.01); })
+  );
+
+  fxRow.append(dlySec, rvbSec);
+
+  fxBtn.onclick = () => {
+    const open = !fxRow.classList.contains('open');
+    fxRow.classList.toggle('open', open);
+    fxBtn.classList.toggle('fx-on', open);
+  };
+
+  wrap.appendChild(row);
+  wrap.appendChild(fxRow);
+  tracksEl.appendChild(wrap);
   drawTrackWave(layer.buffer, cv, layer.color);
   updateDlBtn();
 }
@@ -692,7 +808,7 @@ function updateDlBtn() {
 
 function resetAll() {
   clearTimeout(waitTimer); waitTimer = null;
-  layers.forEach(l => { if (l.gainNode) { l.gainNode.disconnect(); l.gainNode=null; } });
+  layers.forEach(l => { destroyFxChain(l); if (l.gainNode) { l.gainNode.disconnect(); l.gainNode=null; } });
   stopAllSrcs(); stopMetro(); stopLiveDraw(); stopPlayhead();
   cancelAnimationFrame(animFr);
   waveCtx.clearRect(0,0,waveCv.width,90);
@@ -875,9 +991,25 @@ async function downloadMix() {
       const src = offCtx.createBufferSource();
       src.buffer = l.buffer; src.loop = true;
       src.loopStart = lS; src.loopEnd = lE;
-      const g = offCtx.createGain();
-      g.gain.value = l.vol ?? 1;
-      src.connect(g); g.connect(offCtx.destination);
+
+      const volG = offCtx.createGain(); volG.gain.value = l.vol ?? 1;
+      src.connect(volG);
+      volG.connect(offCtx.destination); // señal seca
+
+      // Recrear FX en offline context usando los valores actuales del live context
+      if (l.fx) {
+        if (l.fx.delayWet.gain.value > 0.001) {
+          const dly = offCtx.createDelay(1.0); dly.delayTime.value = l.fx.delay.delayTime.value;
+          const fb  = offCtx.createGain();     fb.gain.value  = l.fx.feedback.gain.value;
+          const wet = offCtx.createGain();     wet.gain.value = l.fx.delayWet.gain.value;
+          volG.connect(dly); dly.connect(fb); fb.connect(dly); dly.connect(wet); wet.connect(offCtx.destination);
+        }
+        if (l.fx.reverbWet.gain.value > 0.001) {
+          const conv = offCtx.createConvolver(); conv.buffer = l.fx.convolver.buffer;
+          const wet  = offCtx.createGain();      wet.gain.value = l.fx.reverbWet.gain.value;
+          volG.connect(conv); conv.connect(wet); wet.connect(offCtx.destination);
+        }
+      }
       src.start(0, lS);
     });
 
