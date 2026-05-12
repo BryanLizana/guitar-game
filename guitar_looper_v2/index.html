@@ -35,7 +35,32 @@
       <span id="btn-lbl">GRABAR</span>
     </button>
     <div class="status" id="status">Presiona para grabar el loop principal</div>
-    <button class="countin-btn" id="countin-btn" title="Cuenta 3 tiempos y graba automáticamente">1 · 2 · 3 · REC</button>
+
+    <div class="rec-cfg">
+      <!-- Count-in: 2 compases antes de grabar -->
+      <button class="countin-btn" id="countin-btn"
+              title="Cuenta 2 compases y graba automáticamente">
+        ◀ 2 compases · REC
+      </button>
+
+      <!-- Modo loop fijo: cuántos compases grabar -->
+      <div class="bars-cfg">
+        <span class="bars-lbl">Loop:</span>
+        <select id="bars-sel" title="Compases a grabar (libre = sin límite)">
+          <option value="0">∞ libre</option>
+          <option value="1">1 compás</option>
+          <option value="2">2 compases</option>
+          <option value="4">4 compases</option>
+          <option value="8">8 compases</option>
+          <option value="16">16 compases</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de progreso de grabación cuantizada (visible solo en modo bars) -->
+  <div class="rec-progress-wrap" id="rec-progress-wrap">
+    <canvas id="rec-progress-cv" height="28"></canvas>
   </div>
 
   <div class="stop-row">
@@ -73,6 +98,7 @@
 <script src="js/TapTempo.js"></script>
 <script src="js/Exporter.js"></script>
 <script src="js/TrackView.js"></script>
+<script src="js/RecProgress.js"></script>
 <script src="js/App.js"></script>
 <script src="js/main.js"></script>
 </body>

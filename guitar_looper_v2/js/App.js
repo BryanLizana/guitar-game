@@ -7,6 +7,10 @@ GL.app = {
   _metroLbl: null, _bpmSl: null, _bpmVEl: null, _sigSel: null,
   _rulCv: null, _waveCv: null, _trimCv: null, _playheadEl: null,
   _trimHint: null, _countInBtn: null, _dlBtn: null,
+  _barsSel: null, _recProgressWrap: null, _recProgressCv: null,
+
+  // Timer de auto-stop (modo bars)
+  _autoStopTimer: null,
 
   init() {
     this._bindDOM();
@@ -45,9 +49,14 @@ GL.app = {
     this._waveCv     = document.getElementById('wave-cv');
     this._trimCv     = document.getElementById('trim-cv');
     this._playheadEl = document.getElementById('playhead');
-    this._trimHint   = document.getElementById('trim-hint');
-    this._countInBtn = document.getElementById('countin-btn');
-    this._dlBtn      = document.getElementById('dl-btn');
+    this._trimHint       = document.getElementById('trim-hint');
+    this._countInBtn     = document.getElementById('countin-btn');
+    this._dlBtn          = document.getElementById('dl-btn');
+    this._barsSel        = document.getElementById('bars-sel');
+    this._recProgressWrap = document.getElementById('rec-progress-wrap');
+    this._recProgressCv  = document.getElementById('rec-progress-cv');
+
+    GL.recProgress.init(this._recProgressCv, this._recProgressWrap);
   },
 
   _setupMetronome() {
@@ -83,13 +92,14 @@ GL.app = {
 
   _setupCountIn() {
     GL.countIn.configure({
-      playClick: first => GL.metronome.playClick(first),
-      flashDot:  ()    => this._flashDot(),
-      getBpm:    ()    => GL.appState.bpm,
-      onTick: (label, remaining) => {
-        this._btnIcon.textContent = label;
-        this._btnLbl.textContent  = '';
-        this._setStatus('Grabando en ' + remaining + '...');
+      playClick:     first => GL.metronome.playClick(first),
+      flashDot:      ()    => this._flashDot(),
+      getBpm:        ()    => GL.appState.bpm,
+      getBeatsPerBar:()    => GL.appState.beatsPerBar,
+      onTick: (bar, beat, beatsPerBar, remaining) => {
+        this._btnIcon.textContent = beat + '';
+        this._btnLbl.textContent  = 'BARRA ' + bar + '/2';
+        this._setStatus('Grabando en ' + remaining + ' tiempo' + (remaining !== 1 ? 's' : '') + '...');
       },
       onDone: () => {
         this._countInBtn.classList.remove('active');
@@ -198,16 +208,38 @@ GL.app = {
       GL.appState.current = ST.REC;
       this._mainBtn.className   = 'main-btn rec';
       this._btnIcon.textContent = '⏹'; this._btnLbl.textContent = 'PARAR';
-      this._setStatus('🔴 Grabando loop principal...');
       GL.appState.loopStart = ctx.currentTime;
       GL.recorder.start();
       GL.liveWaveform.start(this._waveCv);
       this._stopBtn.classList.add('show');
+      this._barsSel.disabled = true;
+
+      // Modo bars: auto-stop + progress bar
+      const bars = parseInt(this._barsSel.value);
+      if (bars > 0) {
+        const totalMs = bars * GL.appState.beatsPerBar * (60000 / GL.appState.bpm);
+        GL.recProgress.start(GL.appState.loopStart, bars, GL.appState.bpm, GL.appState.beatsPerBar);
+        this._setStatus('🔴 Grabando ' + bars + ' compás' + (bars > 1 ? 'es' : '') + '...');
+        this._autoStopTimer = setTimeout(() => {
+          if (GL.appState.current === ST.REC) this._mainBtn.click();
+        }, totalMs);
+      } else {
+        this._setStatus('🔴 Grabando loop principal...');
+      }
       return;
     }
 
     if (s === ST.REC) {
-      const blob = await GL.recorder.stop();
+      clearTimeout(this._autoStopTimer); this._autoStopTimer = null;
+      GL.recProgress.stop();
+      this._barsSel.disabled = false;
+      let blob;
+      try { blob = await GL.recorder.stop(); }
+      catch (e) {
+        this._setStatus('⚠️ Error al detener grabación: ' + e.message);
+        GL.liveWaveform.stop();
+        GL.appState.current = ST.IDLE; this._mainBtn.className = 'main-btn idle'; return;
+      }
       GL.liveWaveform.stop();
       GL.appState.loopDuration = ctx.currentTime - GL.appState.loopStart;
       let buf;
@@ -267,11 +299,17 @@ GL.app = {
     }
 
     if (s === ST.OVERLAY) {
-      const blob = await GL.recorder.stop();
+      let blob;
+      try { blob = await GL.recorder.stop(); }
+      catch (e) {
+        this._setStatus('⚠️ Error al detener capa: ' + e.message);
+        GL.liveWaveform.stop();
+        GL.appState.current = ST.PLAYING; this._mainBtn.className = 'main-btn playing'; return;
+      }
       let rawBuf;
       try { rawBuf = await GL.audioEngine.decodeBlob(blob); }
       catch (e) {
-        this._setStatus('⚠️ Error');
+        this._setStatus('⚠️ Error de decodificación');
         GL.appState.current = ST.PLAYING; this._mainBtn.className = 'main-btn playing'; return;
       }
 
@@ -372,6 +410,9 @@ GL.app = {
 
   _resetAll() {
     clearTimeout(GL.appState.waitTimer);
+    clearTimeout(this._autoStopTimer); this._autoStopTimer = null;
+    GL.recProgress.stop();
+    this._barsSel.disabled = false;
     GL.appState.layers.forEach(l => {
       GL.fxChain.destroy(l);
       if (l.gainNode) { l.gainNode.disconnect(); l.gainNode = null; }
