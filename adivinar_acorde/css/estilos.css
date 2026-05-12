@@ -1,0 +1,105 @@
+:root {
+    --fondo: #1a1a2e;
+    --panel: #16213e;
+    --acento: #f0a500;
+    --verde: #2ecc71;
+    --rojo: #e74c3c;
+    --texto: #e0e0e0;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: var(--fondo);
+    color: var(--texto);
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 12px;
+    min-height: 100vh;
+}
+h1 { color: var(--acento); font-size: 1.5em; letter-spacing: 3px; }
+.fila {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.panel {
+    background: var(--panel);
+    border-radius: 10px;
+    padding: 12px 18px;
+}
+label { font-size: 0.82em; color: #aaa; margin-right: 5px; }
+select {
+    background: #0f3460;
+    color: white;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.88em;
+    cursor: pointer;
+}
+#display-acorde { text-align: center; min-width: 170px; }
+#nombre-acorde {
+    font-size: 3em;
+    font-weight: 700;
+    color: var(--acento);
+    line-height: 1;
+}
+#descripcion-acorde { font-size: 0.82em; color: #999; margin-top: 4px; }
+#contenedor-mastil {
+    background: linear-gradient(180deg, #3d1f05 0%, #2b1504 50%, #3d1f05 100%);
+    border-radius: 12px;
+    padding: 10px 14px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.6), inset 0 0 25px rgba(0,0,0,0.3);
+    border: 2px solid #5a3010;
+    overflow-x: auto;
+}
+canvas { display: block; cursor: crosshair; }
+button {
+    padding: 9px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.92em;
+    font-weight: 600;
+    transition: opacity 0.15s, transform 0.1s;
+}
+button:hover:not(:disabled) { opacity: 0.82; transform: translateY(-1px); }
+button:active:not(:disabled) { transform: translateY(0); }
+button:disabled { opacity: 0.35; cursor: not-allowed; }
+#btn-tocar {
+    background: var(--acento);
+    color: #1a1a2e;
+    font-size: 1em;
+    padding: 11px 26px;
+}
+#btn-limpiar  { background: #c0392b; color: white; }
+#btn-siguiente { background: #27ae60; color: white; }
+#btn-pista    { background: #7d3c98; color: white; }
+#feedback {
+    font-size: 1.3em;
+    font-weight: bold;
+    min-height: 1.6em;
+    text-align: center;
+}
+.correcto   { color: var(--verde); }
+.incorrecto { color: var(--rojo); }
+#info-notas { font-size: 0.83em; color: #aaa; }
+#pista {
+    background: rgba(125, 60, 152, 0.18);
+    border: 1px solid #7d3c98;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.88em;
+    max-width: 600px;
+    text-align: center;
+    display: none;
+}
+#instruccion {
+    font-size: 0.78em;
+    color: #666;
+    text-align: center;
+}

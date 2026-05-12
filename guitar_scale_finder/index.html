@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>🎸 Guitar Scale Finder</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+<div class="app">
+  <header class="app-header">
+    <div class="hdr">
+      <span class="hdr-ico">🎸</span>
+      <div class="hdr-txt">
+        <h1>Guitar Scale Finder</h1>
+        <p>Detecta acordes · Encuentra escalas · Escucha el mástil</p>
+      </div>
+      <button class="btn-menu" id="btn-menu">☰</button>
+    </div>
+  </header>
+  <div class="overlay" id="overlay"></div>
+  <div class="app-body">
+    <aside class="panel-izq" id="panel-izq">
+      <section class="sec">
+        <h2 class="sec-tit">Lista de Acordes</h2>
+        <div class="inp-grp">
+          <input id="inp-acorde" class="inp" type="text" placeholder="Am, C, G7, Emaj7...">
+          <button id="btn-add" class="btn-add">+</button>
+        </div>
+        <p id="err-msg" class="err-msg" hidden></p>
+        <div id="acordes-rapidos" class="acordes-rapidos"></div>
+        <div id="chips" class="chips"></div>
+        <button id="btn-clear-list" class="btn-txt" hidden>Limpiar lista</button>
+      </section>
+      <section class="sec sec-escalas">
+        <h2 class="sec-tit">Escalas Detectadas</h2>
+        <div id="escalas-lista"></div>
+      </section>
+    </aside>
+    <section class="panel-der">
+      <div class="tabs">
+        <button class="tab tab-on" id="tab-det">🎵 Detectar Acorde</button>
+        <button class="tab" id="tab-map">🗺️ Mapa de Escala</button>
+      </div>
+      <div id="panel-contenido"></div>
+    </section>
+  </div>
+</div>
+
+<!-- Datos base (sin dependencias entre sí) -->
+<script src="js/datos/constantes.js"></script>
+<script src="js/datos/acordes.js"></script>
+<script src="js/datos/escalas.js"></script>
+<script src="js/datos/progresiones.js"></script>
+
+<!-- Servicios (dependen solo de datos) -->
+<script src="js/servicios/ServicioAudio.js"></script>
+<script src="js/servicios/ServicioTeoria.js"></script>
+<script src="js/servicios/ServicioMapa.js"></script>
+
+<!-- Estado centralizado -->
+<script src="js/estado/EstadoApp.js"></script>
+
+<!-- Componentes (dependen de servicios y estado) -->
+<script src="js/componentes/ComponenteMastil.js"></script>
+<script src="js/componentes/ComponentePanelIzq.js"></script>
+<script src="js/componentes/ComponentePanelDer.js"></script>
+
+<!-- Controlador (orquesta acciones y eventos) -->
+<script src="js/controladores/ControladorApp.js"></script>
+
+<!-- Punto de entrada -->
+<script src="js/app.js"></script>
+</body>
+</html>

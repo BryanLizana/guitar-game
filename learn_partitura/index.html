@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lectura de Partituras</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<h1>🎵 Lectura de Partituras</h1>
+
+<!-- Selector de modo -->
+<div class="mode-tabs">
+  <button class="mode-tab active" id="tabBtnRead">📖 Leer Partituras</button>
+  <button class="mode-tab"        id="tabBtnPlay">🎸 Modo Tablatura</button>
+</div>
+
+<!-- Selector de accidental compartido (visible en ambos modos) -->
+<div class="selector-accidental" id="selectorAccidental"></div>
+
+<!-- ═══ MODO LECTURA ═══════════════════════════════════════════════════════ -->
+<div id="readMode">
+  <div class="game-area">
+    <canvas id="staffCanvas" width="400" height="260"></canvas>
+
+    <div class="side-panel">
+      <div class="feedback" id="feedback">¿Qué nota es?</div>
+
+      <input
+        type="text"
+        id="noteInput"
+        placeholder="C / Sol / C#"
+        maxlength="4"
+        autocomplete="off"
+        spellcheck="false"
+        autofocus
+      >
+
+      <button class="btn btn-primary"   id="checkBtn">Verificar  (Enter ↵)</button>
+      <button class="btn btn-secondary" id="listenBtn">🔊 Escuchar nota</button>
+
+      <div class="hint">
+        <span>Do</span>=C &nbsp;·&nbsp; <span>Re</span>=D &nbsp;·&nbsp; <span>Mi</span>=E<br>
+        <span>Fa</span>=F &nbsp;·&nbsp; <span>Sol</span>=G &nbsp;·&nbsp; <span>La</span>=A &nbsp;·&nbsp; <span>Si</span>=B<br>
+        Sostenido ♯: <span>C#</span> · <span>Do#</span> · <span>SOL</span><br>
+        Bemol ♭: <span>Db</span> · <span>Reb</span> · <span>Sib</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="scores">
+    <div class="score-box"><div class="val" id="sCorrect">0</div><div class="lbl">Aciertos</div></div>
+    <div class="score-box"><div class="val" id="sStreak">0</div><div class="lbl">Racha</div></div>
+    <div class="score-box"><div class="val" id="sTotal">0</div><div class="lbl">Intentos</div></div>
+  </div>
+</div>
+
+<!-- ═══ MODO TABLATURA ═════════════════════════════════════════════════════ -->
+<div id="tabMode">
+  <div class="tab-panel">
+    <div class="tab-note-display" id="tabDisplay">— —</div>
+    <div class="tab-solfeo"       id="tabSolfeo">escribe una nota</div>
+
+    <div class="key-row" id="keyRow"></div>
+
+    <div class="tab-instruction">
+      Teclea <strong>a – g</strong> para escuchar la nota natural.<br>
+      <strong>Shift + letra</strong> = sostenido ♯ o bemol ♭ según el selector de arriba.<br>
+      También puedes hacer clic en las etiquetas <em>♯</em> / <em>♭</em> de cada botón.<br>
+      <em>Esta ventana debe estar activa para detectar teclas.</em>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts en orden de dependencia -->
+<script src="js/datos/notas.js"></script>
+<script src="js/servicios/ServicioAudio.js"></script>
+<script src="js/servicios/ServicioDibujo.js"></script>
+<script src="js/servicios/GestorAccidental.js"></script>
+<script src="js/modos/Modo.js"></script>
+<script src="js/modos/GestorPuntaje.js"></script>
+<script src="js/modos/ModoLectura.js"></script>
+<script src="js/modos/ModoTablatura.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
