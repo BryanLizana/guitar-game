@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guitar Looper</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar">
+    <span class="title">🎸 Looper</span>
+    <div class="bpm-group">
+      <span>BPM</span>
+      <input type="range" id="bpm-sl" min="40" max="240" value="120" step="1">
+      <span class="bpm-v" id="bpm-v">120</span>
+    </div>
+    <select class="sig-sel" id="sig-sel">
+      <option value="4">4/4</option>
+      <option value="3">3/4</option>
+      <option value="2">2/2</option>
+    </select>
+    <button class="metro-btn" id="metro-btn">
+      <span class="metro-dot" id="metro-dot"></span>
+      <span id="metro-lbl">Metrónomo</span>
+    </button>
+    <button class="tap-btn" id="tap-btn" title="Toca el ritmo para fijar BPM (o presiona T)">Tap</button>
+  </div>
+
+  <div class="btn-wrap">
+    <button class="main-btn idle" id="main-btn">
+      <div class="ring"></div>
+      <span class="btn-icon" id="btn-icon">⏺</span>
+      <span id="btn-lbl">GRABAR</span>
+    </button>
+    <div class="status" id="status">Presiona para grabar el loop principal</div>
+    <button class="countin-btn" id="countin-btn" title="Cuenta 3 tiempos y graba automáticamente">1 · 2 · 3 · REC</button>
+  </div>
+
+  <div class="stop-row">
+    <button class="stop-btn" id="stop-btn">⏹ Detener todo</button>
+    <button class="dl-btn" id="dl-btn">⬇ Descargar mix</button>
+  </div>
+
+  <div class="daw-wrap" id="daw-wrap">
+    <div class="daw-ruler"><canvas id="ruler-cv" height="20"></canvas></div>
+    <div class="daw-main">
+      <canvas id="wave-cv" height="90"></canvas>
+      <canvas id="trim-cv" height="90"></canvas>
+      <div class="daw-playhead" id="playhead"></div>
+    </div>
+  </div>
+  <div class="trim-hint" id="trim-hint">Arrastra los marcadores ◀ ▶ para recortar el loop</div>
+
+  <div class="tracks-lbl">Pistas</div>
+  <div class="tracks" id="tracks"><div class="empty">Aún no hay pistas grabadas</div></div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
+<script src="js/AppState.js"></script>
+<script src="js/AudioEngine.js"></script>
+<script src="js/Metronome.js"></script>
+<script src="js/Recorder.js"></script>
+<script src="js/Player.js"></script>
+<script src="js/FxChain.js"></script>
+<script src="js/WaveformRenderer.js"></script>
+<script src="js/LiveWaveform.js"></script>
+<script src="js/Playhead.js"></script>
+<script src="js/TrimEditor.js"></script>
+<script src="js/CountIn.js"></script>
+<script src="js/TapTempo.js"></script>
+<script src="js/Exporter.js"></script>
+<script src="js/TrackView.js"></script>
+<script src="js/App.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
