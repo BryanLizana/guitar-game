@@ -8,9 +8,12 @@ GL.app = {
   _rulCv: null, _waveCv: null, _trimCv: null, _playheadEl: null,
   _trimHint: null, _countInBtn: null, _dlBtn: null,
   _barsSel: null, _recProgressWrap: null, _recProgressCv: null,
+  _spaceModeBtn: null,
 
   // Timer de auto-stop (modo bars)
   _autoStopTimer: null,
+  // Timestamp del último espacio pulsado (para cooldown modo tecla-space)
+  _spaceLastPress: null,
 
   init() {
     this._bindDOM();
@@ -55,6 +58,7 @@ GL.app = {
     this._barsSel        = document.getElementById('bars-sel');
     this._recProgressWrap = document.getElementById('rec-progress-wrap');
     this._recProgressCv  = document.getElementById('rec-progress-cv');
+    this._spaceModeBtn   = document.getElementById('spacemode-btn');
 
     GL.recProgress.init(this._recProgressCv, this._recProgressWrap);
   },
@@ -184,11 +188,22 @@ GL.app = {
     tapBtn.addEventListener('click', () => { GL.audioEngine.init(); GL.tapTempo.tap(); });
     tapBtn.addEventListener('touchstart', e => { e.preventDefault(); GL.audioEngine.init(); GL.tapTempo.tap(); }, { passive: false });
 
+    this._spaceModeBtn.addEventListener('click', () => {
+      GL.appState.spaceKeyMode = !GL.appState.spaceKeyMode;
+      this._spaceModeBtn.classList.toggle('active', GL.appState.spaceKeyMode);
+      this._spaceLastPress = null;
+    });
+
     document.addEventListener('keydown', e => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
       if (e.code === 'KeyT') { GL.audioEngine.init(); GL.tapTempo.tap(); return; }
       if (e.code !== 'Space') return;
       e.preventDefault();
+      if (GL.appState.spaceKeyMode) {
+        const now = Date.now();
+        if (this._spaceLastPress !== null && (now - this._spaceLastPress) < 2000) return;
+        this._spaceLastPress = now;
+      }
       this._mainBtn.click();
     });
   },
@@ -249,8 +264,13 @@ GL.app = {
         GL.appState.current = ST.IDLE; this._mainBtn.className = 'main-btn idle'; return;
       }
       GL.appState.mainBuffer = buf;
-      GL.appState.trimStart  = 0;
-      GL.appState.trimEnd    = GL.appState.loopDuration;
+      if (GL.appState.spaceKeyMode && GL.appState.loopDuration > 0.6) {
+        GL.appState.trimStart = 0.25;
+        GL.appState.trimEnd   = GL.appState.loopDuration - 0.25;
+      } else {
+        GL.appState.trimStart = 0;
+        GL.appState.trimEnd   = GL.appState.loopDuration;
+      }
 
       const layer = { buffer: buf, color: GL.COLORS[0], muted: false };
       GL.appState.layers.push(layer);

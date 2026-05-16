@@ -20,6 +20,7 @@ GL.appState = {
   layers:       [],
   recStartPhase: 0,
   waitTimer:    null,
+  spaceKeyMode: false,
 
   reset() {
     this.current      = 'idle';
