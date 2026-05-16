@@ -268,9 +268,9 @@ GL.app = {
         GL.appState.current = ST.IDLE; this._mainBtn.className = 'main-btn idle'; return;
       }
       GL.appState.mainBuffer = buf;
-      if (GL.appState.spaceKeyMode && GL.appState.loopDuration > 0.6) {
-        GL.appState.trimStart = 0.25;
-        GL.appState.trimEnd   = GL.appState.loopDuration - 0.25;
+      if (GL.appState.spaceKeyMode && GL.appState.loopDuration > 0.3) {
+        GL.appState.trimStart = 0.15;
+        GL.appState.trimEnd   = GL.appState.loopDuration - 0.15;
       } else {
         GL.appState.trimStart = 0;
         GL.appState.trimEnd   = GL.appState.loopDuration;
