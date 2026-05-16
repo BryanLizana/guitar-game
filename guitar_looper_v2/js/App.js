@@ -188,17 +188,21 @@ GL.app = {
     tapBtn.addEventListener('click', () => { GL.audioEngine.init(); GL.tapTempo.tap(); });
     tapBtn.addEventListener('touchstart', e => { e.preventDefault(); GL.audioEngine.init(); GL.tapTempo.tap(); }, { passive: false });
 
-    this._spaceModeBtn.addEventListener('click', () => {
+    const _toggleSpaceMode = () => {
       GL.appState.spaceKeyMode = !GL.appState.spaceKeyMode;
       this._spaceModeBtn.classList.toggle('active', GL.appState.spaceKeyMode);
       this._spaceLastPress = null;
-    });
+      this._spaceModeBtn.blur();
+    };
+    this._spaceModeBtn.addEventListener('touchstart', e => { e.preventDefault(); _toggleSpaceMode(); }, { passive: false });
+    this._spaceModeBtn.addEventListener('click', _toggleSpaceMode);
 
     document.addEventListener('keydown', e => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-      if (e.code === 'KeyT') { GL.audioEngine.init(); GL.tapTempo.tap(); return; }
-      if (e.code !== 'Space') return;
+      if (e.code === 'KeyT' || e.key === 't' || e.key === 'T') { GL.audioEngine.init(); GL.tapTempo.tap(); return; }
+      if (e.code !== 'Space' && e.key !== ' ') return;
       e.preventDefault();
+      if (e.target === this._spaceModeBtn) return;
       if (GL.appState.spaceKeyMode) {
         const now = Date.now();
         if (this._spaceLastPress !== null && (now - this._spaceLastPress) < 2000) return;
