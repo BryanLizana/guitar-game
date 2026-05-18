@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guitar Game - Herramientas</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #0f0f0f;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      color: #f5a623;
+      letter-spacing: 2px;
+    }
+
+    p.subtitle {
+      color: #888;
+      margin-bottom: 3rem;
+      font-size: 1rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      text-decoration: none;
+      color: #e0e0e0;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: #f5a623;
+      box-shadow: 0 8px 24px rgba(245, 166, 35, 0.15);
+    }
+
+    .card .icon {
+      font-size: 2.5rem;
+    }
+
+    .card .name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #f0f0f0;
+    }
+
+    .card .desc {
+      font-size: 0.85rem;
+      color: #777;
+    }
+
+    footer {
+      margin-top: 3rem;
+      color: #444;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎸 Guitar Game</h1>
+  <p class="subtitle">Selecciona una herramienta para comenzar</p>
+
+  <div class="grid">
+
+    <a class="card" href="adivinar_acorde/index.html">
+      <span class="icon">🎵</span>
+      <span class="name">Adivinar Acorde</span>
+      <span class="desc">Pon a prueba tu oído identificando acordes</span>
+    </a>
+
+    <a class="card" href="drum_local/index.html">
+      <span class="icon">🥁</span>
+      <span class="name">Drum Local</span>
+      <span class="desc">Practica ritmos y patrones de batería</span>
+    </a>
+
+    <a class="card" href="guitar_looper_v2/index.html">
+      <span class="icon">🔁</span>
+      <span class="name">Guitar Looper</span>
+      <span class="desc">Crea y graba loops de guitarra en tiempo real</span>
+    </a>
+
+    <a class="card" href="guitar_scale_finder/index.html">
+      <span class="icon">🎼</span>
+      <span class="name">Scale Finder</span>
+      <span class="desc">Encuentra escalas y sus posiciones en el mástil</span>
+    </a>
+
+    <a class="card" href="learn_partitura/index.html">
+      <span class="icon">📄</span>
+      <span class="name">Learn Partitura</span>
+      <span class="desc">Aprende a leer partituras musicales</span>
+    </a>
+
+  </div>
+
+  <footer>Guitar Game &mdash; Herramientas de práctica musical</footer>
+
+</body>
+</html>

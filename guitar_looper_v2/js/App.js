@@ -8,9 +8,12 @@ GL.app = {
   _rulCv: null, _waveCv: null, _trimCv: null, _playheadEl: null,
   _trimHint: null, _countInBtn: null, _dlBtn: null,
   _barsSel: null, _recProgressWrap: null, _recProgressCv: null,
+  _spaceModeBtn: null,
 
   // Timer de auto-stop (modo bars)
   _autoStopTimer: null,
+  // Timestamp del último espacio pulsado (para cooldown modo tecla-space)
+  _spaceLastPress: null,
 
   init() {
     this._bindDOM();
@@ -55,6 +58,7 @@ GL.app = {
     this._barsSel        = document.getElementById('bars-sel');
     this._recProgressWrap = document.getElementById('rec-progress-wrap');
     this._recProgressCv  = document.getElementById('rec-progress-cv');
+    this._spaceModeBtn   = document.getElementById('spacemode-btn');
 
     GL.recProgress.init(this._recProgressCv, this._recProgressWrap);
   },
@@ -184,11 +188,26 @@ GL.app = {
     tapBtn.addEventListener('click', () => { GL.audioEngine.init(); GL.tapTempo.tap(); });
     tapBtn.addEventListener('touchstart', e => { e.preventDefault(); GL.audioEngine.init(); GL.tapTempo.tap(); }, { passive: false });
 
+    const _toggleSpaceMode = () => {
+      GL.appState.spaceKeyMode = !GL.appState.spaceKeyMode;
+      this._spaceModeBtn.classList.toggle('active', GL.appState.spaceKeyMode);
+      this._spaceLastPress = null;
+      this._spaceModeBtn.blur();
+    };
+    this._spaceModeBtn.addEventListener('touchstart', e => { e.preventDefault(); _toggleSpaceMode(); }, { passive: false });
+    this._spaceModeBtn.addEventListener('click', _toggleSpaceMode);
+
     document.addEventListener('keydown', e => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-      if (e.code === 'KeyT') { GL.audioEngine.init(); GL.tapTempo.tap(); return; }
-      if (e.code !== 'Space') return;
+      if (e.code === 'KeyT' || e.key === 't' || e.key === 'T') { GL.audioEngine.init(); GL.tapTempo.tap(); return; }
+      if (e.code !== 'Space' && e.key !== ' ') return;
       e.preventDefault();
+      if (e.target === this._spaceModeBtn) return;
+      if (GL.appState.spaceKeyMode) {
+        const now = Date.now();
+        if (this._spaceLastPress !== null && (now - this._spaceLastPress) < 2000) return;
+        this._spaceLastPress = now;
+      }
       this._mainBtn.click();
     });
   },
@@ -249,8 +268,13 @@ GL.app = {
         GL.appState.current = ST.IDLE; this._mainBtn.className = 'main-btn idle'; return;
       }
       GL.appState.mainBuffer = buf;
-      GL.appState.trimStart  = 0;
-      GL.appState.trimEnd    = GL.appState.loopDuration;
+      if (GL.appState.spaceKeyMode && GL.appState.loopDuration > 0.3) {
+        GL.appState.trimStart = 0.15;
+        GL.appState.trimEnd   = GL.appState.loopDuration - 0.15;
+      } else {
+        GL.appState.trimStart = 0;
+        GL.appState.trimEnd   = GL.appState.loopDuration;
+      }
 
       const layer = { buffer: buf, color: GL.COLORS[0], muted: false };
       GL.appState.layers.push(layer);

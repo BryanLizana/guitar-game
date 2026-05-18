@@ -64,6 +64,8 @@ body{background:#111;color:#ddd;font-family:system-ui,sans-serif;min-height:100v
 .countin-btn{font-size:11px;padding:5px 14px;border-radius:20px;border:1px solid #333;background:transparent;color:#666;cursor:pointer;letter-spacing:1px;-webkit-tap-highlight-color:transparent;transition:all .15s}
 .countin-btn:disabled{color:#333;border-color:#222;cursor:default}
 .countin-btn.active{border-color:#FFA726;color:#FFA726}
+.spacemode-btn{font-size:11px;padding:5px 14px;border-radius:20px;border:1px solid #333;background:transparent;color:#666;cursor:pointer;letter-spacing:1px;-webkit-tap-highlight-color:transparent;transition:all .15s}
+.spacemode-btn.active{border-color:#29B6F6;color:#29B6F6;background:rgba(41,182,246,.07)}
 .bars-cfg{display:flex;align-items:center;gap:4px}
 .bars-lbl{font-size:10px;color:#555;letter-spacing:1px;text-transform:uppercase}
 .bars-sel{font-size:11px;padding:3px 6px;border-radius:5px;border:1px solid #333;background:#1a1a1a;color:#aaa;cursor:pointer}
