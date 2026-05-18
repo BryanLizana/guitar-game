@@ -64,6 +64,17 @@
       <button id="btn-limpiar" class="btn-limpiar">Limpiar</button>
     </div>
 
+    <div class="sep"></div>
+
+    <!-- Kit de samples -->
+    <div class="ctrl-grupo">
+      <span class="ctrl-label">Kit</span>
+      <button id="btn-cargar-kit" class="btn-cargar-kit">Cargar Kit</button>
+      <button id="btn-limpiar-kit" class="btn-limpiar-kit" style="display:none">✕</button>
+      <input type="file" id="input-samples" multiple accept=".wav,.mp3,.ogg" style="display:none">
+      <span id="estado-samples" class="estado-samples">Síntesis</span>
+    </div>
+
   </header>
 
   <!-- ===== BEAT INDICATOR BAR ===== -->
@@ -104,6 +115,8 @@
 <!-- Sonidos -->
 <script src="js/sonidos/GestorContextoAudio.js"></script>
 <script src="js/sonidos/SintetizadorDrum.js"></script>
+<script src="js/sonidos/CargadorSamples.js"></script>
+<script src="js/sonidos/ReproductorSamples.js"></script>
 <script src="js/sonidos/BibliotecaSonidos.js"></script>
 <!-- Secuenciador -->
 <script src="js/secuenciador/PistaRitmo.js"></script>
@@ -114,6 +127,7 @@
 <!-- UI -->
 <script src="js/ui/RenderizadorGrid.js"></script>
 <script src="js/ui/ControladorUI.js"></script>
+<script src="js/ui/ControladorCargaSamples.js"></script>
 <!-- App -->
 <script src="js/AplicacionDrum.js"></script>
 
