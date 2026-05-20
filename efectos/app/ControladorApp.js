@@ -4,7 +4,10 @@ class ControladorApp {
   constructor() {
     this._gestorCtx          = new ContextoAudio();
     this._gestorDispositivos = new GestorDispositivosAudio();
+    this._gestorArchivo      = new GestorArchivoAudio();
     this._flujoActual        = null;
+    this._fuenteArchivo      = null;
+    this._selector           = null;
     this._vistaEstado        = null;
     this._cadena             = null;
   }
@@ -24,12 +27,14 @@ class ControladorApp {
     this._vistaEstado = new VistaEstado();
     this._raiz.appendChild(this._vistaEstado.renderizar());
 
-    const selector = new VistaSelector({
+    this._selector = new VistaSelector({
       dispositivos,
-      alSeleccionar: () => {},
-      alConectar:    id => this._conectar(id),
+      alSeleccionar:       () => {},
+      alConectar:          id      => this._conectar(id),
+      alReproducirArchivo: archivo => this._reproducirArchivo(archivo),
+      alDetenerArchivo:    ()      => this._detenerArchivo(),
     });
-    this._raiz.appendChild(selector.renderizar());
+    this._raiz.appendChild(this._selector.renderizar());
 
     const ctx = this._gestorCtx.obtener();
 
@@ -173,6 +178,7 @@ class ControladorApp {
   async _conectar(idDispositivo) {
     try {
       this._vistaEstado.mostrarConectando();
+      this._pararArchivo();
 
       if (this._flujoActual) {
         this._flujoActual.getTracks().forEach(t => t.stop());
@@ -190,6 +196,46 @@ class ControladorApp {
       this._vistaEstado.mostrarConectado(nombreTrack);
     } catch (e) {
       this._vistaEstado.mostrarError(e.message);
+    }
+  }
+
+  async _reproducirArchivo(archivo) {
+    try {
+      this._vistaEstado.mostrarConectando();
+
+      if (this._flujoActual) {
+        this._flujoActual.getTracks().forEach(t => t.stop());
+        this._flujoActual = null;
+      }
+      this._pararArchivo();
+
+      const ctx    = await this._gestorCtx.reanudar();
+      const buffer = await this._gestorArchivo.decodificar(archivo, ctx);
+
+      const fuente  = ctx.createBufferSource();
+      fuente.buffer = buffer;
+      fuente.loop   = true;
+
+      this._fuenteArchivo = fuente;
+      this._cadena.conectarFuente(fuente);
+      fuente.start(0);
+
+      this._vistaEstado.mostrarConectado(archivo.name);
+    } catch (e) {
+      this._vistaEstado.mostrarError(e.message);
+      this._selector.notificarDetenido();
+    }
+  }
+
+  _detenerArchivo() {
+    this._pararArchivo();
+    this._vistaEstado.mostrarEsperando();
+  }
+
+  _pararArchivo() {
+    if (this._fuenteArchivo) {
+      try { this._fuenteArchivo.stop(); } catch (_) {}
+      this._fuenteArchivo = null;
     }
   }
 }

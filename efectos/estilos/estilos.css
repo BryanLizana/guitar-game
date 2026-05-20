@@ -107,6 +107,66 @@ body {
 .btn-conectar:active   { background: #c7334e; transform: scale(.98); }
 .btn-conectar:disabled { background: #3a3d47; color: var(--texto-dim); cursor: not-allowed; }
 
+/* ── SECCIÓN ARCHIVO ────────────────────────────────────── */
+.divisor-selector {
+  text-align: center;
+  color: var(--texto-dim);
+  font-size: 0.72rem;
+  letter-spacing: 2px;
+  margin: 14px 0 12px;
+}
+.input-archivo {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--knob-pista);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  color: var(--texto);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.input-archivo::file-selector-button {
+  background: var(--borde);
+  border: none;
+  border-radius: 5px;
+  color: var(--texto);
+  padding: 5px 10px;
+  margin-right: 10px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.nombre-archivo {
+  font-size: 0.78rem;
+  color: var(--texto-dim);
+  margin: 7px 0 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fila-archivo {
+  display: flex;
+  gap: 10px;
+}
+.btn-play, .btn-stop {
+  flex: 1;
+  padding: 13px;
+  border: none;
+  border-radius: 9px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background .15s, transform .1s;
+  touch-action: manipulation;
+}
+.btn-play          { background: var(--verde); color: #111; }
+.btn-play:active   { background: #00c068; transform: scale(.98); }
+.btn-play:disabled { background: #1a3d2e; color: var(--texto-dim); cursor: not-allowed; }
+.btn-stop          { background: var(--acento); color: #fff; }
+.btn-stop:active   { background: #c7334e; transform: scale(.98); }
+.btn-stop:disabled { background: #3a3d47; color: var(--texto-dim); cursor: not-allowed; }
+
 /* ── TARJETA DE EFECTO ──────────────────────────────────── */
 .tarjeta-efecto {
   background: var(--panel);
