@@ -1,0 +1,437 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #0d1117;
+    color: #c9d1d9;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 16px;
+}
+
+.contenedor {
+    width: 620px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+}
+
+header {
+    text-align: center;
+}
+
+header h1 {
+    font-size: 1.9rem;
+    color: #58a6ff;
+    letter-spacing: -0.02em;
+}
+
+.subtitulo {
+    font-size: 0.85rem;
+    color: #6e7681;
+    margin-top: 3px;
+}
+
+/* ── Selector de modos ── */
+.selector-modos {
+    display: flex;
+    gap: 6px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 5px;
+    width: 100%;
+}
+
+.btn-modo {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #6e7681;
+    padding: 9px 20px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.15s;
+}
+
+.btn-modo:hover {
+    color: #c9d1d9;
+    background: #21262d;
+}
+
+.btn-modo.activo {
+    background: #21262d;
+    color: #58a6ff;
+    font-weight: 600;
+}
+
+/* ── Metrónomo ── */
+.metronomo {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 12px 16px;
+    width: 100%;
+}
+
+.metro-fila1 {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    justify-content: space-between;
+}
+
+.metro-bpm-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-bpm {
+    background: #21262d;
+    border: 1px solid #30363d;
+    color: #c9d1d9;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.3rem;
+    line-height: 1;
+    transition: all 0.1s;
+}
+
+.btn-bpm:hover {
+    border-color: #58a6ff;
+    color: #58a6ff;
+}
+
+.bpm-display {
+    text-align: center;
+    min-width: 72px;
+}
+
+#valorBpm {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #e6edf3;
+    font-variant-numeric: tabular-nums;
+}
+
+.bpm-unit {
+    font-size: 0.68rem;
+    color: #6e7681;
+    margin-left: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.metro-beats {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.beat {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #21262d;
+    border: 2px solid #30363d;
+    transition: background 0.04s, border-color 0.04s;
+}
+
+.beat.activo {
+    background: #58a6ff;
+    border-color: #58a6ff;
+    box-shadow: 0 0 8px rgba(88, 166, 255, 0.5);
+}
+
+.beat.acento {
+    background: #f0883e;
+    border-color: #f0883e;
+    box-shadow: 0 0 10px rgba(240, 136, 62, 0.6);
+}
+
+.btn-metro-toggle {
+    background: #21262d;
+    border: 1px solid #30363d;
+    color: #c9d1d9;
+    padding: 8px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: all 0.15s;
+}
+
+.btn-metro-toggle:hover {
+    border-color: #58a6ff;
+    color: #58a6ff;
+}
+
+.btn-metro-toggle.activo {
+    background: rgba(88, 166, 255, 0.12);
+    border-color: #58a6ff;
+    color: #58a6ff;
+}
+
+.slider-bpm {
+    width: 100%;
+    height: 4px;
+    accent-color: #58a6ff;
+    cursor: pointer;
+    border-radius: 2px;
+}
+
+/* ── Ocultar secciones ── */
+.oculto {
+    display: none !important;
+}
+
+/* ── Modo Práctica ── */
+#seccionPractica {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    width: 100%;
+}
+
+.panel-puntuacion {
+    display: flex;
+    gap: 40px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    padding: 14px 40px;
+    border-radius: 12px;
+    width: 100%;
+    justify-content: center;
+}
+
+.stat {
+    text-align: center;
+    min-width: 70px;
+}
+
+.stat-valor {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #3fb950;
+    font-variant-numeric: tabular-nums;
+}
+
+.racha .stat-valor {
+    color: #f0883e;
+}
+
+.stat-label {
+    font-size: 0.72rem;
+    color: #6e7681;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 3px;
+}
+
+.zona-partitura {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 10px 10px 6px;
+    width: 580px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+#canvasPartitura {
+    display: block;
+    border-radius: 6px;
+}
+
+.instruccion {
+    text-align: center;
+    color: #aaa;
+    font-size: 0.82rem;
+    margin-top: 6px;
+    padding-bottom: 2px;
+}
+
+.feedback {
+    height: 48px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    font-weight: 700;
+    border-radius: 10px;
+    visibility: hidden;
+}
+
+.feedback.visible {
+    visibility: visible;
+}
+
+.feedback.correcto {
+    background: rgba(63, 185, 80, 0.12);
+    border: 1px solid #3fb950;
+    color: #3fb950;
+}
+
+.feedback.incorrecto {
+    background: rgba(248, 81, 73, 0.12);
+    border: 1px solid #f85149;
+    color: #f85149;
+}
+
+.zona-botones {
+    display: flex;
+    gap: 14px;
+}
+
+.btn-instrumento {
+    background: #161b22;
+    border: 2px solid #30363d;
+    border-radius: 14px;
+    color: #c9d1d9;
+    cursor: pointer;
+    padding: 18px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 130px;
+    user-select: none;
+    transition: transform 0.1s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.btn-instrumento:hover { transform: translateY(-3px); }
+.btn-instrumento:active { transform: translateY(0); }
+
+.btn-instrumento[data-instrumento="hihat"]:hover  { border-color: #ffd700; box-shadow: 0 4px 16px rgba(255,215,0,0.2); }
+.btn-instrumento[data-instrumento="tarola"]:hover  { border-color: #4d9fff; box-shadow: 0 4px 16px rgba(77,159,255,0.2); }
+.btn-instrumento[data-instrumento="bombo"]:hover   { border-color: #ff5733; box-shadow: 0 4px 16px rgba(255,87,51,0.2); }
+
+.btn-instrumento.correcto      { background: rgba(63,185,80,0.15);  border-color: #3fb950; animation: pulso 0.25s ease; }
+.btn-instrumento.incorrecto    { background: rgba(248,81,73,0.15);  border-color: #f85149; }
+.btn-instrumento.correcto-pista{ background: rgba(63,185,80,0.08);  border-color: #3fb950; border-style: dashed; }
+
+.btn-icono {
+    font-size: 1.5rem;
+    color: #8b949e;
+}
+
+.btn-nombre {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e6edf3;
+}
+
+kbd {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 5px;
+    padding: 2px 8px;
+    font-size: 0.72rem;
+    color: #6e7681;
+    font-family: 'Courier New', monospace;
+}
+
+@keyframes pulso {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.06); }
+    100% { transform: scale(1); }
+}
+
+.btn-reiniciar {
+    background: transparent;
+    border: 1px solid #30363d;
+    color: #6e7681;
+    padding: 8px 22px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.15s;
+}
+
+.btn-reiniciar:hover {
+    border-color: #58a6ff;
+    color: #58a6ff;
+}
+
+/* ── Modo Libre ── */
+#seccionLibre {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    width: 100%;
+    padding: 10px 0 20px;
+}
+
+.instruccion-libre {
+    color: #8b949e;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.zona-pads {
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+}
+
+.pad {
+    background: #161b22;
+    border: 2px solid #30363d;
+    border-radius: 18px;
+    cursor: pointer;
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    min-width: 160px;
+    min-height: 170px;
+    justify-content: center;
+    user-select: none;
+    transition: transform 0.08s, border-color 0.1s, background 0.08s, box-shadow 0.1s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Colores por instrumento */
+.pad[data-instrumento="hihat"]  { border-color: rgba(255,215,0,0.25); }
+.pad[data-instrumento="tarola"] { border-color: rgba(77,159,255,0.25); }
+.pad[data-instrumento="bombo"]  { border-color: rgba(255,87,51,0.25); }
+
+.pad:hover[data-instrumento="hihat"]  { border-color: #ffd700; box-shadow: 0 0 22px rgba(255,215,0,0.2); }
+.pad:hover[data-instrumento="tarola"] { border-color: #4d9fff; box-shadow: 0 0 22px rgba(77,159,255,0.2); }
+.pad:hover[data-instrumento="bombo"]  { border-color: #ff5733; box-shadow: 0 0 22px rgba(255,87,51,0.2); }
+
+.pad.activo[data-instrumento="hihat"]  { background: rgba(255,215,0,0.18);  border-color: #ffd700; transform: scale(0.95); box-shadow: 0 0 30px rgba(255,215,0,0.3); }
+.pad.activo[data-instrumento="tarola"] { background: rgba(77,159,255,0.18); border-color: #4d9fff; transform: scale(0.95); box-shadow: 0 0 30px rgba(77,159,255,0.3); }
+.pad.activo[data-instrumento="bombo"]  { background: rgba(255,87,51,0.18);  border-color: #ff5733; transform: scale(0.95); box-shadow: 0 0 30px rgba(255,87,51,0.3); }
+
+.pad-simbolo {
+    font-size: 2.8rem;
+    line-height: 1;
+}
+
+.pad[data-instrumento="hihat"]  .pad-simbolo { color: #ffd700; }
+.pad[data-instrumento="tarola"] .pad-simbolo { color: #4d9fff; }
+.pad[data-instrumento="bombo"]  .pad-simbolo { color: #ff5733; }
+
+.pad-nombre {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #e6edf3;
+}

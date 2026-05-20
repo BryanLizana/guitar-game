@@ -1,0 +1,260 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --fondo:       #111318;
+  --panel:       #1c1f27;
+  --tarjeta:     #252932;
+  --borde:       #2e3340;
+  --acento:      #e94560;
+  --verde:       #00e57a;
+  --azul:        #3d9eff;
+  --texto:       #dde1ea;
+  --texto-dim:   #7a8096;
+  --knob-pista:  #1a1d24;
+  --knob-pulgar: #e94560;
+}
+
+body {
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  min-height: 100vh;
+  padding: 14px 12px 40px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── ENCABEZADO ─────────────────────────────────────────── */
+.encabezado {
+  text-align: center;
+  padding: 12px 0 20px;
+}
+.encabezado h1 {
+  font-size: 1.4rem;
+  letter-spacing: 4px;
+  color: var(--acento);
+  text-transform: uppercase;
+}
+.encabezado p {
+  font-size: 0.75rem;
+  color: var(--texto-dim);
+  letter-spacing: 2px;
+  margin-top: 4px;
+}
+
+/* ── BARRA DE ESTADO ────────────────────────────────────── */
+.barra-estado {
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 11px 16px;
+  font-size: 0.82rem;
+  color: var(--texto-dim);
+  text-align: center;
+  margin-bottom: 14px;
+  transition: color .3s, border-color .3s;
+}
+.barra-estado.conectado  { color: var(--verde);  border-color: var(--verde); }
+.barra-estado.error      { color: var(--acento); border-color: var(--acento); }
+.barra-estado.conectando { color: var(--azul);   border-color: var(--azul); }
+
+/* ── SELECTOR DE DISPOSITIVO ────────────────────────────── */
+.bloque-selector {
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.bloque-selector label {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 2px;
+  color: var(--texto-dim);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.bloque-selector select {
+  width: 100%;
+  padding: 13px 12px;
+  background: var(--knob-pista);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  color: var(--texto);
+  font-size: 0.95rem;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a8096' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+.btn-conectar {
+  width: 100%;
+  margin-top: 12px;
+  padding: 15px;
+  background: var(--acento);
+  border: none;
+  border-radius: 9px;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background .15s, transform .1s;
+  touch-action: manipulation;
+}
+.btn-conectar:active   { background: #c7334e; transform: scale(.98); }
+.btn-conectar:disabled { background: #3a3d47; color: var(--texto-dim); cursor: not-allowed; }
+
+/* ── TARJETA DE EFECTO ──────────────────────────────────── */
+.tarjeta-efecto {
+  background: var(--panel);
+  border: 2px solid var(--borde);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 14px;
+  transition: border-color .3s;
+}
+.tarjeta-efecto.activo { border-color: var(--verde); }
+
+.cabecera-efecto {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.nombre-efecto {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+.numero-orden {
+  font-size: 0.68rem;
+  color: var(--texto-dim);
+  margin-left: 8px;
+  font-weight: 400;
+  letter-spacing: 1px;
+}
+
+/* ── TOGGLE ─────────────────────────────────────────────── */
+.toggle { position: relative; width: 58px; height: 30px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-pista {
+  position: absolute;
+  inset: 0;
+  background: var(--borde);
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background .25s;
+}
+.toggle-pista::before {
+  content: '';
+  position: absolute;
+  width: 22px; height: 22px;
+  left: 4px; top: 4px;
+  background: var(--texto-dim);
+  border-radius: 50%;
+  transition: transform .25s, background .25s;
+}
+.toggle input:checked + .toggle-pista            { background: #1a4a30; }
+.toggle input:checked + .toggle-pista::before    { transform: translateX(28px); background: var(--verde); }
+
+/* ── KNOBS ──────────────────────────────────────────────── */
+.fila-knobs {
+  display: flex;
+  gap: 10px;
+}
+.grupo-knob {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+.etiqueta-knob {
+  font-size: 0.68rem;
+  letter-spacing: 1.5px;
+  color: var(--texto-dim);
+  text-transform: uppercase;
+}
+.valor-knob {
+  font-size: 0.8rem;
+  color: var(--verde);
+  font-weight: 600;
+  min-width: 44px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Range input grande para táctil */
+.rango-knob {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: var(--knob-pista);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+.rango-knob::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--knob-pulgar);
+  border: 3px solid #fff2;
+  cursor: pointer;
+  box-shadow: 0 2px 8px #0008;
+}
+.rango-knob::-moz-range-thumb {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--knob-pulgar);
+  border: 3px solid #fff2;
+  cursor: pointer;
+  box-shadow: 0 2px 8px #0008;
+}
+.rango-knob::-webkit-slider-runnable-track { border-radius: 3px; }
+
+/* Colores de pulgar por efecto */
+.overdrive .rango-knob::-webkit-slider-thumb { background: #f07230; }
+.overdrive .rango-knob::-moz-range-thumb      { background: #f07230; }
+.overdrive .valor-knob                        { color: #f07230; }
+
+.fuzz .rango-knob::-webkit-slider-thumb { background: #c840e0; }
+.fuzz .rango-knob::-moz-range-thumb      { background: #c840e0; }
+.fuzz .valor-knob                        { color: #c840e0; }
+
+.delay .rango-knob::-webkit-slider-thumb { background: var(--azul); }
+.delay .rango-knob::-moz-range-thumb      { background: var(--azul); }
+.delay .valor-knob                        { color: var(--azul); }
+
+.reverb .rango-knob::-webkit-slider-thumb { background: #00c9c9; }
+.reverb .rango-knob::-moz-range-thumb      { background: #00c9c9; }
+.reverb .valor-knob                        { color: #00c9c9; }
+
+.compressor .rango-knob::-webkit-slider-thumb { background: #ffd600; }
+.compressor .rango-knob::-moz-range-thumb      { background: #ffd600; }
+.compressor .valor-knob                        { color: #ffd600; }
+
+.eq3bandas .rango-knob::-webkit-slider-thumb { background: #69f0ae; }
+.eq3bandas .rango-knob::-moz-range-thumb      { background: #69f0ae; }
+.eq3bandas .valor-knob                        { color: #69f0ae; }
+
+.wah .rango-knob::-webkit-slider-thumb { background: #ff6d00; }
+.wah .rango-knob::-moz-range-thumb      { background: #ff6d00; }
+.wah .valor-knob                        { color: #ff6d00; }
+
+.chorus .rango-knob::-webkit-slider-thumb { background: #40c4ff; }
+.chorus .rango-knob::-moz-range-thumb      { background: #40c4ff; }
+.chorus .valor-knob                        { color: #40c4ff; }
+
+.tremolo .rango-knob::-webkit-slider-thumb { background: #ea80fc; }
+.tremolo .rango-knob::-moz-range-thumb      { background: #ea80fc; }
+.tremolo .valor-knob                        { color: #ea80fc; }
+
+.bajo .rango-knob::-webkit-slider-thumb { background: #ff6e40; }
+.bajo .rango-knob::-moz-range-thumb      { background: #ff6e40; }
+.bajo .valor-knob                        { color: #ff6e40; }

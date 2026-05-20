@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lectura de Partitura - Batería</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+    <div class="contenedor">
+
+        <header>
+            <h1>Lectura de Partitura</h1>
+            <p class="subtitulo">Batería</p>
+        </header>
+
+        <!-- Selector de modos -->
+        <div class="selector-modos">
+            <button class="btn-modo activo" id="btnModoPractica">📚 Práctica</button>
+            <button class="btn-modo"        id="btnModoLibre">🥁 Libre</button>
+        </div>
+
+        <!-- Metrónomo (visible en ambos modos) -->
+        <div class="metronomo">
+            <div class="metro-fila1">
+                <div class="metro-bpm-ctrl">
+                    <button class="btn-bpm" id="btnBpmMenos">−</button>
+                    <div class="bpm-display">
+                        <span id="valorBpm">80</span>
+                        <span class="bpm-unit">BPM</span>
+                    </div>
+                    <button class="btn-bpm" id="btnBpmMas">+</button>
+                </div>
+
+                <div class="metro-beats">
+                    <div class="beat" id="beat0"></div>
+                    <div class="beat" id="beat1"></div>
+                    <div class="beat" id="beat2"></div>
+                    <div class="beat" id="beat3"></div>
+                </div>
+
+                <button class="btn-metro-toggle" id="btnMetronomo">▶ Metrónomo</button>
+            </div>
+            <input type="range" id="sliderBpm" class="slider-bpm" min="40" max="220" step="1" value="80">
+        </div>
+
+        <!-- ── MODO PRÁCTICA ── -->
+        <div id="seccionPractica">
+
+            <div class="panel-puntuacion">
+                <div class="stat">
+                    <div class="stat-valor" id="contadorCorrectas">0</div>
+                    <div class="stat-label">Correctas</div>
+                </div>
+                <div class="stat racha">
+                    <div class="stat-valor" id="contadorRacha">0</div>
+                    <div class="stat-label">Racha</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-valor" id="contadorIncorrectas">0</div>
+                    <div class="stat-label">Incorrectas</div>
+                </div>
+            </div>
+
+            <div class="zona-partitura">
+                <canvas id="canvasPartitura" width="560" height="220"></canvas>
+                <p class="instruccion">¿Qué instrumento corresponde a esta nota?</p>
+            </div>
+
+            <div id="feedback" class="feedback"></div>
+
+            <div class="zona-botones">
+                <button class="btn-instrumento" data-instrumento="hihat">
+                    <div class="btn-icono">✕</div>
+                    <div class="btn-nombre">Hi-Hat</div>
+                    <kbd>H</kbd>
+                </button>
+                <button class="btn-instrumento" data-instrumento="tarola">
+                    <div class="btn-icono">●</div>
+                    <div class="btn-nombre">Tarola</div>
+                    <kbd>T</kbd>
+                </button>
+                <button class="btn-instrumento" data-instrumento="bombo">
+                    <div class="btn-icono">●</div>
+                    <div class="btn-nombre">Bombo</div>
+                    <kbd>B</kbd>
+                </button>
+            </div>
+
+            <button id="btnReiniciar" class="btn-reiniciar">Reiniciar</button>
+        </div>
+
+        <!-- ── MODO LIBRE ── -->
+        <div id="seccionLibre" class="oculto">
+            <p class="instruccion-libre">Toca libremente mientras lees tu partitura</p>
+            <div class="zona-pads">
+                <button class="pad" data-instrumento="hihat">
+                    <div class="pad-simbolo">✕</div>
+                    <div class="pad-nombre">Hi-Hat</div>
+                    <kbd>H</kbd>
+                </button>
+                <button class="pad" data-instrumento="tarola">
+                    <div class="pad-simbolo">●</div>
+                    <div class="pad-nombre">Tarola</div>
+                    <kbd>T</kbd>
+                </button>
+                <button class="pad" data-instrumento="bombo">
+                    <div class="pad-simbolo">●</div>
+                    <div class="pad-nombre">Bombo</div>
+                    <kbd>B</kbd>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="js/modelos/Instrumento.js"></script>
+    <script src="js/modelos/Nota.js"></script>
+    <script src="js/datos/catalogoInstrumentos.js"></script>
+    <script src="js/servicios/GeneradorNotas.js"></script>
+    <script src="js/servicios/ValidadorRespuesta.js"></script>
+    <script src="js/servicios/GestorPuntuacion.js"></script>
+    <script src="js/servicios/SintetizadorAudio.js"></script>
+    <script src="js/servicios/Metronomo.js"></script>
+    <script src="js/renderizadores/RenderizadorPartitura.js"></script>
+    <script src="js/controladores/ControladorJuego.js"></script>
+    <script src="js/ui/GestorInterfaz.js"></script>
+    <script src="js/ui/GestorModos.js"></script>
+    <script src="js/ui/GestorMetronomo.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
