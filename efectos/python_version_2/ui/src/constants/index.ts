@@ -219,7 +219,13 @@ const models = [
   {
     name: 'new',
     url: '/models/new.nam',
+  }
+,
+  {
+    name: 'Distorsion',
+    url: '/models/Valvetronics_NuMetal.nam',
   },
+  
 ];
 
 const githubBaseUrl =
