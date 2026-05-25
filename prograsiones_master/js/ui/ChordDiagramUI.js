@@ -1,5 +1,5 @@
 /**
- * Chord network overlay on Captura.PNG.
+ * Chord network overlay on Captura.png.
  * Image (2012×2016) drawn at 780×780; node circles calibrated to align.
  * Center=(390,390), R_I=340 → scale ≈ 877/2012 image px.
  * No arrows drawn — image provides them.
@@ -22,7 +22,7 @@ class ChordDiagramUI {
 
     this._img = new Image();
     this._img.onload = () => this.draw();
-    this._img.src = 'Captura.PNG';
+    this._img.src = 'Captura.png';
 
     this._build();
     this._bindEvents();
@@ -31,7 +31,7 @@ class ChordDiagramUI {
 
   // ── Node layout ─────────────────────────────────────────────
   _build() {
-    // All positions derived from pixel-scan of Captura.PNG (2012×2016 → 780×780 canvas)
+    // All positions derived from pixel-scan of Captura.png (2012×2016 → 780×780 canvas)
     const OX = 386, OY = 401;
     const R_I  = 306;   // major / I  (outer ring)
     const R_va = 249;   // aug   / V+
@@ -65,7 +65,7 @@ class ChordDiagramUI {
       this._nodes.push({ id: def.ii,   x: OX + R_ii * rx, y: OY + R_ii * ry, r: 17, color: '#4499ff', type: 'min'  });
     });
 
-    // Inner Coltrane octagon — positions from pixel-scan of Captura.PNG
+    // Inner Coltrane octagon — positions from pixel-scan of Captura.png
     [
       { id: 'C',   x: 428, y: 345, color: '#ff4455' },
       { id: 'G7',  x: 378, y: 353, color: '#ffcc00' },

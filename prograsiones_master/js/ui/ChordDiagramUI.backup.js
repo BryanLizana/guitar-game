@@ -1,5 +1,5 @@
 /**
- * Recreates Captura.PNG exactly:
+ * Recreates Captura.png exactly:
  *
  * Central octagon  (alternating major/dom7 a minor-3rd apart):
  *   C → G7 → Eb → Bb7 → Gb → Db7 → A → E7 → C
@@ -34,7 +34,7 @@ class ChordDiagramUI {
     this._hovered  = null;
 
     // ── Fixed node layout (logical coords, centre = 400,400) ──
-    // Colors match Captura.PNG: red=major, yellow=dom7, green=aug, blue=minor
+    // Colors match Captura.png: red=major, yellow=dom7, green=aug, blue=minor
     const R = 170; // octagon radius
     const ox = 400, oy = 400;
     // Octagon angles: C top, then clockwise 45° steps
