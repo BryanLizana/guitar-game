@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.guitareffects.app-mergeDebugResources-2:/values-port/values-port.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\bryan\\.gradle\\caches\\transforms-4\\2c316772ad9945c58e7dcf9c7d9dad3b\\transformed\\appcompat-1.6.1\\res\\values-port\\values-port.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "55",
+                        "endOffsets": "106"
+                    }
+                }
+            ]
+        }
+    ]
+}

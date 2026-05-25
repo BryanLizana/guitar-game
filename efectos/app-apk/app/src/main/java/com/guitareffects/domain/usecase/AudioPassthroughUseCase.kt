@@ -1,5 +1,6 @@
 package com.guitareffects.domain.usecase
 
+import com.guitareffects.domain.model.AudioEffect
 import com.guitareffects.domain.model.AudioState
 import com.guitareffects.domain.repository.IAudioRepository
 import com.guitareffects.infrastructure.diagnostic.IDiagnosticTracer
@@ -28,4 +29,7 @@ class AudioPassthroughUseCase(
     fun isRunning(): Boolean = repository.isRunning()
 
     fun setGain(gain: Float) = repository.setGain(gain)
+
+    fun setEffectEnabled(effect: AudioEffect, enabled: Boolean) =
+        repository.setEffectEnabled(effect, enabled)
 }

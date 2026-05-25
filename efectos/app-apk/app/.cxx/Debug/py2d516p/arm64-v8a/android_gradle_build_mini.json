@@ -1,0 +1,31 @@
+{
+  "buildFiles": [
+    "C:\\DEV\\Docker\\projects\\claude-pe\\guitar-game-main\\guitar-game\\efectos\\app-apk\\app\\.cxx\\Debug\\py2d516p\\prefab\\arm64-v8a\\prefab\\lib\\aarch64-linux-android\\cmake\\oboe\\oboeConfig.cmake",
+    "C:\\DEV\\Docker\\projects\\claude-pe\\guitar-game-main\\guitar-game\\efectos\\app-apk\\app\\.cxx\\Debug\\py2d516p\\prefab\\arm64-v8a\\prefab\\lib\\aarch64-linux-android\\cmake\\oboe\\oboeConfigVersion.cmake",
+    "C:\\DEV\\Docker\\projects\\claude-pe\\guitar-game-main\\guitar-game\\efectos\\app-apk\\app\\CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "C:\\Android\\cmake\\3.22.1\\bin\\ninja.exe",
+      "-C",
+      "C:\\DEV\\Docker\\projects\\claude-pe\\guitar-game-main\\guitar-game\\efectos\\app-apk\\app\\.cxx\\Debug\\py2d516p\\arm64-v8a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "C:\\Android\\cmake\\3.22.1\\bin\\ninja.exe",
+    "-C",
+    "C:\\DEV\\Docker\\projects\\claude-pe\\guitar-game-main\\guitar-game\\efectos\\app-apk\\app\\.cxx\\Debug\\py2d516p\\arm64-v8a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "guitar-engine::@6890427a1f51a3e7e1df": {
+      "artifactName": "guitar-engine",
+      "abi": "arm64-v8a",
+      "output": "C:\\DEV\\Docker\\projects\\claude-pe\\guitar-game-main\\guitar-game\\efectos\\app-apk\\app\\build\\intermediates\\cxx\\Debug\\py2d516p\\obj\\arm64-v8a\\libguitar-engine.so",
+      "runtimeFiles": [
+        "C:\\Users\\bryan\\.gradle\\caches\\transforms-4\\ca50b5259ef20d07ed60eea69594e85e\\transformed\\oboe-1.9.3\\prefab\\modules\\oboe\\libs\\android.arm64-v8a\\liboboe.so"
+      ]
+    }
+  }
+}

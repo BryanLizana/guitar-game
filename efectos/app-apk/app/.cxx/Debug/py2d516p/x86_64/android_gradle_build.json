@@ -1,0 +1,42 @@
+{
+  "buildFiles": [
+    "C:\\DEV\\Docker\\projects\\claude-pe\\guitar-game-main\\guitar-game\\efectos\\app-apk\\app\\.cxx\\Debug\\py2d516p\\prefab\\x86_64\\prefab\\lib\\x86_64-linux-android\\cmake\\oboe\\oboeConfig.cmake",
+    "C:\\DEV\\Docker\\projects\\claude-pe\\guitar-game-main\\guitar-game\\efectos\\app-apk\\app\\.cxx\\Debug\\py2d516p\\prefab\\x86_64\\prefab\\lib\\x86_64-linux-android\\cmake\\oboe\\oboeConfigVersion.cmake",
+    "C:\\DEV\\Docker\\projects\\claude-pe\\guitar-game-main\\guitar-game\\efectos\\app-apk\\app\\CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "C:\\Android\\cmake\\3.22.1\\bin\\ninja.exe",
+      "-C",
+      "C:\\DEV\\Docker\\projects\\claude-pe\\guitar-game-main\\guitar-game\\efectos\\app-apk\\app\\.cxx\\Debug\\py2d516p\\x86_64",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "C:\\Android\\cmake\\3.22.1\\bin\\ninja.exe",
+    "-C",
+    "C:\\DEV\\Docker\\projects\\claude-pe\\guitar-game-main\\guitar-game\\efectos\\app-apk\\app\\.cxx\\Debug\\py2d516p\\x86_64",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "guitar-engine::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86_64",
+      "artifactName": "guitar-engine",
+      "output": "C:\\DEV\\Docker\\projects\\claude-pe\\guitar-game-main\\guitar-game\\efectos\\app-apk\\app\\build\\intermediates\\cxx\\Debug\\py2d516p\\obj\\x86_64\\libguitar-engine.so",
+      "runtimeFiles": [
+        "C:\\Users\\bryan\\.gradle\\caches\\transforms-4\\ca50b5259ef20d07ed60eea69594e85e\\transformed\\oboe-1.9.3\\prefab\\modules\\oboe\\libs\\android.x86_64\\liboboe.so"
+      ]
+    }
+  },
+  "toolchains": {
+    "toolchain": {
+      "cCompilerExecutable": "C:\\Android\\ndk\\28.2.13676358\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe",
+      "cppCompilerExecutable": "C:\\Android\\ndk\\28.2.13676358\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe"
+    }
+  },
+  "cFileExtensions": [],
+  "cppFileExtensions": [
+    "cpp"
+  ]
+}

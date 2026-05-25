@@ -1,0 +1,14 @@
+# ninja log v5
+38	4967	8012685106110212	CMakeFiles/guitar-engine.dir/src/main/cpp/jni_bridge.cpp.o	98c7e1253e11e058
+16	5499	8012685111560197	CMakeFiles/guitar-engine.dir/src/main/cpp/AudioEngine.cpp.o	585212df8b57925c
+6530	6910	8012711281696929	../../../../build/intermediates/cxx/Debug/py2d516p/obj/arm64-v8a/libguitar-engine.so	5f36f04435abe264
+34	6217	8012549248297563	CMakeFiles/guitar-engine.dir/src/main/cpp/AudioEngineRaw.cpp.o	cedf6e0f6e35ea0f
+20	6529	8012711277457108	CMakeFiles/guitar-engine.dir/src/main/cpp/dsp/NamProcessor.cpp.o	e38454723a53981b
+108	6965	8012769296325250	CMakeFiles/guitar-engine.dir/src/main/cpp/jni_bridge.cpp.o	bb12a6cf665ad2
+97	6985	8012769296435261	CMakeFiles/guitar-engine.dir/src/main/cpp/AudioEngineRaw.cpp.o	14379d224e0e7c4a
+64	7700	8012769304015259	CMakeFiles/guitar-engine.dir/src/main/cpp/AudioEngine.cpp.o	93ffbde4b2217247
+119	8450	8012769311325182	CMakeFiles/guitar-engine.dir/src/main/cpp/dsp/NamProcessor.cpp.o	9800f567e6f15eeb
+8451	9165	8012769318765212	../../../../build/intermediates/cxx/Debug/py2d516p/obj/arm64-v8a/libguitar-engine.so	5f36f04435abe264
+67	6732	8012781004982785	CMakeFiles/guitar-engine.dir/src/main/cpp/jni_bridge.cpp.o	bb12a6cf665ad2
+26	7181	8012781013662741	CMakeFiles/guitar-engine.dir/src/main/cpp/AudioEngine.cpp.o	93ffbde4b2217247
+7182	7645	8012781018362754	../../../../build/intermediates/cxx/Debug/py2d516p/obj/arm64-v8a/libguitar-engine.so	5f36f04435abe264

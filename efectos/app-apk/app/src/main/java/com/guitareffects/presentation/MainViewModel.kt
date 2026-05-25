@@ -3,6 +3,7 @@ package com.guitareffects.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.guitareffects.domain.model.AudioEffect
 import com.guitareffects.domain.model.AudioState
 import com.guitareffects.domain.model.DiagnosticInfo
 import com.guitareffects.domain.usecase.AudioPassthroughUseCase
@@ -34,6 +35,9 @@ class MainViewModel(
     }
 
     fun setGain(gain: Float) = useCase.setGain(gain)
+
+    fun setEffectEnabled(effect: AudioEffect, enabled: Boolean) =
+        useCase.setEffectEnabled(effect, enabled)
 
     fun updatePermissionState(granted: Boolean) {
         tracer.updatePermissionState(granted)

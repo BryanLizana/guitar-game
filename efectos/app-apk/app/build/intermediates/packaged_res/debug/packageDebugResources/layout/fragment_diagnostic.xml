@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/bg_dark">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- AUDIO ENGINE section -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="── AUDIO ENGINE ──────────────"
+            android:textColor="@color/diag_header"
+            android:fontFamily="monospace"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView android:id="@+id/labelSampleRate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sample Rate"
+            android:textColor="@color/diag_label"
+            android:fontFamily="monospace"
+            android:textSize="12sp" />
+
+        <TextView android:id="@+id/tvSampleRate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="—"
+            android:textColor="@color/diag_value"
+            android:fontFamily="monospace"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="6dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Buffer Size"
+            android:textColor="@color/diag_label"
+            android:fontFamily="monospace"
+            android:textSize="12sp" />
+
+        <TextView android:id="@+id/tvBufferSize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="—"
+            android:textColor="@color/diag_value"
+            android:fontFamily="monospace"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="6dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Audio Source"
+            android:textColor="@color/diag_label"
+            android:fontFamily="monospace"
+            android:textSize="12sp" />
+
+        <TextView android:id="@+id/tvAudioSource"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="—"
+            android:textColor="@color/diag_value"
+            android:fontFamily="monospace"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="6dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="UNPROCESSED Support"
+            android:textColor="@color/diag_label"
+            android:fontFamily="monospace"
+            android:textSize="12sp" />
+
+        <TextView android:id="@+id/tvUnprocessed"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="—"
+            android:textColor="@color/diag_value"
+            android:fontFamily="monospace"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <!-- STREAM STATE section -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="── STREAM STATE ──────────────"
+            android:textColor="@color/diag_header"
+            android:fontFamily="monospace"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Record State"
+            android:textColor="@color/diag_label"
+            android:fontFamily="monospace"
+            android:textSize="12sp" />
+
+        <TextView android:id="@+id/tvRecordState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="IDLE"
+            android:textColor="@color/diag_value"
+            android:fontFamily="monospace"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="6dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Track State"
+            android:textColor="@color/diag_label"
+            android:fontFamily="monospace"
+            android:textSize="12sp" />
+
+        <TextView android:id="@+id/tvTrackState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="IDLE"
+            android:textColor="@color/diag_value"
+            android:fontFamily="monospace"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="6dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="MIC Permission"
+            android:textColor="@color/diag_label"
+            android:fontFamily="monospace"
+            android:textSize="12sp" />
+
+        <TextView android:id="@+id/tvPermission"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="—"
+            android:textColor="@color/diag_value"
+            android:fontFamily="monospace"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <!-- PERFORMANCE section -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="── PERFORMANCE ───────────────"
+            android:textColor="@color/diag_header"
+            android:fontFamily="monospace"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Estimated Latency"
+            android:textColor="@color/diag_label"
+            android:fontFamily="monospace"
+            android:textSize="12sp" />
+
+        <TextView android:id="@+id/tvLatency"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="—"
+            android:textColor="@color/diag_value"
+            android:fontFamily="monospace"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="6dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Underruns"
+            android:textColor="@color/diag_label"
+            android:fontFamily="monospace"
+            android:textSize="12sp" />
+
+        <TextView android:id="@+id/tvUnderruns"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textColor="@color/diag_value"
+            android:fontFamily="monospace"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="6dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Total Frames Processed"
+            android:textColor="@color/diag_label"
+            android:fontFamily="monospace"
+            android:textSize="12sp" />
+
+        <TextView android:id="@+id/tvFrames"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textColor="@color/diag_value"
+            android:fontFamily="monospace"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <!-- ERROR LOG section -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="── ERROR LOG ─────────────────"
+            android:textColor="@color/diag_error"
+            android:fontFamily="monospace"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tvErrorLog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="(no errors)"
+            android:textColor="@color/diag_value"
+            android:fontFamily="monospace"
+            android:textSize="11sp"
+            android:background="@color/bg_log"
+            android:padding="8dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Action buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnClear"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Clear Log"
+                android:textSize="12sp"
+                android:fontFamily="monospace"
+                android:backgroundTint="@color/btn_diagnostic"
+                android:layout_marginEnd="8dp" />
+
+            <Button
+                android:id="@+id/btnClose"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Close"
+                android:textSize="12sp"
+                android:fontFamily="monospace"
+                android:backgroundTint="@color/btn_pedal" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

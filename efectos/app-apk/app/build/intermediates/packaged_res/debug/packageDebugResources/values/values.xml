@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_dark">#0F0F0F</color>
+    <color name="bg_log">#1A1A1A</color>
+    <color name="btn_diagnostic">#2C3E50</color>
+    <color name="btn_pedal">#C0392B</color>
+    <color name="diag_error">#E74C3C</color>
+    <color name="diag_header">#27AE60</color>
+    <color name="diag_label">#7F8C8D</color>
+    <color name="diag_value">#ECF0F1</color>
+    <color name="pedal_delay_off">#221A08</color>
+    <color name="pedal_delay_on">#FF8F00</color>
+    <color name="pedal_overdrive_off">#220808</color>
+    <color name="pedal_overdrive_on">#E53935</color>
+    <color name="pedal_reverb_off">#112233</color>
+    <color name="pedal_reverb_on">#2979FF</color>
+    <color name="pedal_wah_off">#0A1A0A</color>
+    <color name="pedal_wah_on">#43A047</color>
+    <color name="text_primary">#E8E8E8</color>
+    <color name="text_secondary">#888888</color>
+    <string name="app_name">Guitar Effects</string>
+    <style name="Theme.GuitarEffects" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/btn_pedal</item>
+        <item name="colorPrimaryVariant">@color/btn_pedal</item>
+        <item name="colorOnPrimary">@color/text_primary</item>
+        <item name="android:windowBackground">@color/bg_dark</item>
+        <item name="android:statusBarColor">@color/bg_dark</item>
+        <item name="android:navigationBarColor">@color/bg_dark</item>
+    </style>
+</resources>

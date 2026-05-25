@@ -1,0 +1,1 @@
+C:\DEV\Docker\projects\claude-pe\guitar-game-main\guitar-game\efectos\app-apk\app\build\intermediates\cxx\Debug\py2d516p\obj\x86_64

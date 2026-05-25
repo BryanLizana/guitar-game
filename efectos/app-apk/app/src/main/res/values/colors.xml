@@ -6,6 +6,18 @@
     <color name="text_secondary">#888888</color>
     <color name="btn_pedal">#C0392B</color>
     <color name="btn_diagnostic">#2C3E50</color>
+
+    <!-- Pedal inactive (dark) -->
+    <color name="pedal_reverb_off">#112233</color>
+    <color name="pedal_delay_off">#221A08</color>
+    <color name="pedal_overdrive_off">#220808</color>
+    <color name="pedal_wah_off">#0A1A0A</color>
+
+    <!-- Pedal active (bright) -->
+    <color name="pedal_reverb_on">#2979FF</color>
+    <color name="pedal_delay_on">#FF8F00</color>
+    <color name="pedal_overdrive_on">#E53935</color>
+    <color name="pedal_wah_on">#43A047</color>
     <color name="diag_header">#27AE60</color>
     <color name="diag_label">#7F8C8D</color>
     <color name="diag_value">#ECF0F1</color>

@@ -1,0 +1,3 @@
+C:/DEV/Docker/projects/claude-pe/guitar-game-main/guitar-game/efectos/app-apk/app/.cxx/Debug/py2d516p/x86_64/CMakeFiles/guitar-engine.dir
+C:/DEV/Docker/projects/claude-pe/guitar-game-main/guitar-game/efectos/app-apk/app/.cxx/Debug/py2d516p/x86_64/CMakeFiles/edit_cache.dir
+C:/DEV/Docker/projects/claude-pe/guitar-game-main/guitar-game/efectos/app-apk/app/.cxx/Debug/py2d516p/x86_64/CMakeFiles/rebuild_cache.dir

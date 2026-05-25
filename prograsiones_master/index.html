@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acordes & Diapasón</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <h1>Acordes &amp; Diapasón</h1>
+    <p>Selecciona un acorde · elige escala para improvisar</p>
+    <div class="audio-bar">
+      <button id="btn-sound" class="sound-btn" title="Activar/silenciar sonido">🔊 Sonido</button>
+      <input  id="vol-slider" type="range" min="0" max="100" value="72" title="Volumen">
+      <span   id="vol-label">72%</span>
+    </div>
+  </header>
+
+  <div class="scale-row">
+        <label>Escala:</label>
+        <select id="scale-sel">
+          <option value="">— ninguna —</option>
+          <option value="major">Mayor</option>
+          <option value="minor">Menor Natural</option>
+          <option value="dorian">Dórica</option>
+          <option value="mixolydian">Mixolidia</option>
+          <option value="penta_major">Pent. Mayor</option>
+          <option value="penta_minor">Pent. Menor</option>
+          <option value="blues">Blues</option>
+          <option value="harmonic_minor">Menor Arm.</option>
+          <option value="melodic_minor">Menor Mel.</option>
+          <option value="lydian">Lidia</option>
+          <option value="phrygian">Frigia</option>
+          <option value="locrian">Locria</option>
+        </select>
+        <span id="scale-suggest"></span>
+      </div>
+      
+  <!-- ══ TOP PANEL: imagen + selector ══════════════════════════ -->
+  <div class="top-panel" style="display: none;">
+
+    <!-- Imágenes de referencia con tabs -->
+    <div class="img-panel">
+      <div class="img-tabs">
+        <button class="itab active" data-img="Captura.PNG">Red 1</button>
+        <button class="itab" data-img="Captura2.PNG">Red 2</button>
+        <button class="itab" data-img="Captura3.PNG">Red 3</button>
+      </div>
+      <div class="img-viewport" id="img-viewport">
+        <img id="ref-img" src="Captura.PNG" alt="Red de acordes" draggable="false">
+      </div>
+      <div class="img-controls">
+        <button id="btn-zoom-in"  title="Zoom +">＋</button>
+        <button id="btn-zoom-out" title="Zoom −">－</button>
+        <button id="btn-zoom-rst" title="Reset">⌖</button>
+        <span   id="zoom-pct">100%</span>
+      </div>
+    </div>
+
+    <!-- Selector de acordes agrupado -->
+    <div class="selector-panel">
+
+      <!-- Filtro de tipo -->
+      <div class="type-tabs">
+        <button class="ttab active" data-type="all">Todos</button>
+        <button class="ttab" data-type="maj">Mayor</button>
+        <button class="ttab" data-type="min">Menor</button>
+        <button class="ttab" data-type="dom7">Dom 7</button>
+        <button class="ttab" data-type="maj7">Maj 7</button>
+        <button class="ttab" data-type="min7">Men 7</button>
+        <button class="ttab" data-type="aug">Aug</button>
+        <button class="ttab" data-type="dim">Dim</button>
+      </div>
+
+      <!-- Grid de acordes -->
+      <div class="chord-grid" id="chord-grid"></div>
+
+      <!-- Escala selector HERERRE -->
+      
+
+    </div>
+  </div>
+
+  <!-- ══ CHORD DIAGRAM ════════════════════════════════════════ -->
+  <section class="diagram-section">
+    <h2>Red Armónica</h2>
+    <canvas id="cv-diagram"></canvas>
+  </section>
+
+  <!-- ══ FRETBOARD ════════════════════════════════════════════ -->
+  <div class="fretboard-wrap">
+    <div id="chord-info">
+      <span id="chord-name">—</span>
+      <span id="chord-notes"></span>
+    </div>
+    <canvas id="cv-fretboard"></canvas>
+  </div>
+
+  <!-- ══ LEGEND ═══════════════════════════════════════════════ -->
+  <section class="legend-section">
+    <h2>Grados / Intervalos</h2>
+    <div id="legend"></div>
+  </section>
+
+  <!-- Image zoom/pan -->
+  <script>
+  (function () {
+    const vp  = document.getElementById('img-viewport');
+    const img = document.getElementById('ref-img');
+    const pct = document.getElementById('zoom-pct');
+
+    let zoom = 1, panX = 0, panY = 0;
+    let drag = { on: false, sx: 0, sy: 0, px: 0, py: 0 };
+
+    function clampPan() {
+      const vpW = vp.clientWidth, vpH = vp.clientHeight;
+      const iW  = vpW * zoom,     iH  = vpH * zoom;
+      const maxX = 0, minX = vpW - iW;
+      const maxY = 0, minY = vpH - iH;
+      panX = Math.min(maxX, Math.max(zoom > 1 ? minX : 0, panX));
+      panY = Math.min(maxY, Math.max(zoom > 1 ? minY : 0, panY));
+    }
+
+    function apply() {
+      clampPan();
+      img.style.transform = `translate(${panX}px,${panY}px) scale(${zoom})`;
+      pct.textContent = Math.round(zoom * 100) + '%';
+    }
+
+    function zoomAt(mx, my, factor) {
+      const newZoom = Math.min(8, Math.max(1, zoom * factor));
+      // Keep point under cursor fixed
+      panX = mx - (mx - panX) * (newZoom / zoom);
+      panY = my - (my - panY) * (newZoom / zoom);
+      zoom = newZoom;
+      apply();
+    }
+
+    function reset() { zoom = 1; panX = 0; panY = 0; apply(); }
+
+    // Wheel zoom anchored at cursor
+    vp.addEventListener('wheel', e => {
+      e.preventDefault();
+      const rect = vp.getBoundingClientRect();
+      zoomAt(e.clientX - rect.left, e.clientY - rect.top,
+             e.deltaY < 0 ? 1.15 : 0.87);
+    }, { passive: false });
+
+    // Drag pan
+    vp.addEventListener('mousedown', e => {
+      drag = { on: true, sx: e.clientX, sy: e.clientY, px: panX, py: panY };
+    });
+    window.addEventListener('mousemove', e => {
+      if (!drag.on) return;
+      panX = drag.px + (e.clientX - drag.sx);
+      panY = drag.py + (e.clientY - drag.sy);
+      apply();
+    });
+    window.addEventListener('mouseup', () => { drag.on = false; });
+
+    // Touch pinch + pan
+    let lastDist = 0, lastMid = { x: 0, y: 0 };
+    vp.addEventListener('touchstart', e => {
+      e.preventDefault();
+      if (e.touches.length === 1) {
+        const t = e.touches[0];
+        drag = { on: true, sx: t.clientX, sy: t.clientY, px: panX, py: panY };
+      } else if (e.touches.length === 2) {
+        drag.on = false;
+        lastDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY);
+        const rect = vp.getBoundingClientRect();
+        lastMid = {
+          x: (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left,
+          y: (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top,
+        };
+      }
+    }, { passive: false });
+
+    vp.addEventListener('touchmove', e => {
+      e.preventDefault();
+      if (e.touches.length === 1 && drag.on) {
+        const t = e.touches[0];
+        panX = drag.px + (t.clientX - drag.sx);
+        panY = drag.py + (t.clientY - drag.sy);
+        apply();
+      } else if (e.touches.length === 2) {
+        const d = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY);
+        zoomAt(lastMid.x, lastMid.y, d / lastDist);
+        lastDist = d;
+      }
+    }, { passive: false });
+
+    vp.addEventListener('touchend', () => { drag.on = false; });
+
+    // Buttons
+    document.getElementById('btn-zoom-in') .onclick = () => zoomAt(vp.clientWidth/2, vp.clientHeight/2, 1.3);
+    document.getElementById('btn-zoom-out').onclick = () => zoomAt(vp.clientWidth/2, vp.clientHeight/2, 0.77);
+    document.getElementById('btn-zoom-rst').onclick = reset;
+
+    // Reset when image changes
+    document.querySelectorAll('.itab').forEach(t =>
+      t.addEventListener('click', reset));
+
+    apply();
+  })();
+  </script>
+
+  <!-- Scripts -->
+  <script src="js/data/ChordsData.js"></script>
+  <script src="js/domain/ChordService.js"></script>
+  <script src="js/domain/FretboardService.js"></script>
+  <script src="js/ui/FretboardRenderer.js"></script>
+  <script src="js/ui/LegendUI.js"></script>
+  <script src="js/ui/AudioEngine.js"></script>
+  <script src="js/ui/ChordDiagramUI.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

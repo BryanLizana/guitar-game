@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.guitareffects.app-mergeDebugResources-2:/values-h320dp-port-v13/values-h320dp-port-v13.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\bryan\\.gradle\\caches\\transforms-4\\364e312dcbe425a05687d96c4e73c4d9\\transformed\\material-1.11.0\\res\\values-h320dp-port-v13\\values-h320dp-port-v13.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "63",
+                        "endOffsets": "114"
+                    }
+                }
+            ]
+        }
+    ]
+}
