@@ -98,10 +98,13 @@ class ControladorUI {
         const nombreAcorde = `${raiz}${tipo === 'maj' ? '' : tipo}`;
         const pistaEl = document.getElementById('pista');
         pistaEl.style.display = 'block';
+        const descripcionVoicing = notas.length === 3
+            ? `Selecciona estas 3 notas en 4 cuerdas (una nota se repite en otra octava).`
+            : `Selecciona estas ${notas.length} notas en ${notas.length} cuerdas distintas.`;
         pistaEl.textContent =
             `💡 ${nombreAcorde} (${TeoríaMusical.NOMBRE_TIPO[tipo]}): ` +
             `las notas son ${notas.join(' - ')}. ` +
-            `Selecciona estas 3 notas en 4 cuerdas distintas (una nota se repite en otra octava).`;
+            descripcionVoicing;
     }
 
     // ── Renderizado ───────────────────────────────────────────────────────────

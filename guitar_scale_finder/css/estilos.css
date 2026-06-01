@@ -94,12 +94,17 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .ley-txt{font-size:11px;color:var(--txt2)}
 .diat-box{margin-top:16px;background:var(--bg2);border:1px solid var(--borde);border-radius:var(--r);padding:12px}
 .diat-tit{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--acento2);margin-bottom:10px}
-.diat-lista{display:flex;flex-wrap:wrap;gap:7px}
-.diat-item{display:flex;flex-direction:column;align-items:center;background:var(--bg);border:1px solid;border-radius:7px;padding:7px 12px;min-width:54px;cursor:pointer;transition:all .2s}
-.diat-item:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.4)}
-.diat-item.activo{box-shadow:0 0 0 2px #fff4;transform:translateY(-2px)}
-.diat-grado{font-size:10px;font-weight:700}
-.diat-nom{font-size:15px;font-weight:800;margin-top:2px}
+.diat-grid{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+.diat-col{display:flex;flex-direction:column;gap:4px;flex:1;min-width:62px}
+.diat-main{display:flex;flex-direction:column;align-items:center;padding:11px 6px;border-radius:8px;border:1px solid;cursor:pointer;transition:background .15s;text-align:center;-webkit-tap-highlight-color:transparent}
+.diat-main:hover{background:var(--bg3)}
+.diat-main.activo{background:rgba(255,255,255,.08)}
+.diat-grado{font-size:11px;font-weight:700}
+.diat-nom{font-size:18px;font-weight:800;margin-top:3px}
+.diat-var{display:block;text-align:center;font-size:13px;font-weight:700;padding:9px 6px;border-radius:7px;background:rgba(255,255,255,.04);border:1px solid currentColor;cursor:pointer;transition:all .15s;opacity:.8;-webkit-tap-highlight-color:transparent}
+.diat-var:hover{background:rgba(255,255,255,.15);opacity:1}
+.diat-var:active{transform:scale(.95)}
+.diat-var.activo{background:rgba(255,255,255,.15);opacity:1;box-shadow:0 0 0 1px rgba(255,255,255,.2)}
 .prog-box{margin-top:14px;background:var(--bg2);border:1px solid var(--borde);border-radius:var(--r);padding:12px}
 .prog-tit{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--acento2);margin-bottom:10px}
 .prog-grupo-tit{font-size:11px;color:var(--txt2);font-weight:600;margin:8px 0 5px;text-transform:uppercase;letter-spacing:.5px}
@@ -125,9 +130,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .traste-l{position:absolute;left:0;top:4px;bottom:4px;width:2px;background:var(--fret);border-radius:1px;z-index:1;pointer-events:none}
 .nota-pto{position:relative;z-index:3;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:transform .1s,opacity .3s;pointer-events:none}
 .nota-pto.dim{opacity:.15;filter:saturate(.2)}
+.nota-pto.nota-extra{animation:pulsoExtra 1.2s ease-in-out infinite}
 .nota-txt{font-size:9px;font-weight:800;color:#111}
 .sound-ripple{position:absolute;width:30px;height:30px;border-radius:50%;animation:ripple .5s ease-out forwards;pointer-events:none;z-index:4}
 @keyframes ripple{0%{transform:scale(1);opacity:.8}100%{transform:scale(2.2);opacity:0}}
+@keyframes pulsoExtra{0%,100%{opacity:.7}50%{opacity:1}}
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50}
 @media(max-width:768px){
   .btn-menu{display:block}

@@ -8,7 +8,7 @@ class GestorAcordes {
     _generarLibres() {
         const acordes = [];
         TeoríaMusical.NOTAS.forEach(raiz => {
-            ['maj', 'm', 'dim'].forEach(tipo => {
+            ['maj', 'm', 'dim', '9', 'maj9', 'm9'].forEach(tipo => {
                 acordes.push({ raiz, tipo, notas: TeoríaMusical.notasDeAcorde(raiz, tipo) });
             });
         });

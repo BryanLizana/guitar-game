@@ -1,7 +1,26 @@
 // S: única responsabilidad — renderizado del panel derecho (detector y mapa de escala)
 (function () {
   const { NOTAS, COLORES_GRADO } = window.GuitarScaleFinder.Constantes;
-  const { SUFMAP } = window.GuitarScaleFinder.Acordes;
+  const { SUFMAP, TIPOS_ACORDE } = window.GuitarScaleFinder.Acordes;
+
+  const VARIANTES_TIPO = {
+    mayor:          ['sus2','sus4','maj7','dom7','add9','dom9','aumentado'],
+    menor:          ['sus2','sus4','menor7','m9','madd9'],
+    dom7:           ['dom9','sus4','sus2'],
+    maj7:           ['maj9','add9'],
+    menor7:         ['m9','madd9'],
+    disminuido:     ['dim7','semidisminuido'],
+    dim7:           ['disminuido','semidisminuido'],
+    semidisminuido: ['disminuido','dim7'],
+    aumentado:      ['mayor','maj7'],
+    sus2:           ['mayor','menor','sus4'],
+    sus4:           ['mayor','menor','sus2'],
+    dom9:           ['dom7'],
+    maj9:           ['maj7','add9'],
+    m9:             ['menor7'],
+    add9:           ['mayor','maj7'],
+    madd9:          ['menor','menor7'],
+  };
 
   // ── Highlight y banner ────────────────────────────────────────────────────
 
@@ -45,6 +64,24 @@
     if (thumb) thumb.style.left = mostrarEnMastil ? '18px' : '3px';
   }
 
+  function agregarNotasExtra(notasAcorde, color) {
+    const { TIPOS_ESCALA } = window.GuitarScaleFinder.Escalas;
+    const { EstadoApp } = window.GuitarScaleFinder;
+    const escala = TIPOS_ESCALA[EstadoApp.tipoEsc];
+    const ti = NOTAS.indexOf(EstadoApp.tonica);
+    const notasEscala = new Set(escala.intervalos.map(iv => (ti + iv) % 12));
+    [...notasAcorde].filter(ni => !notasEscala.has(ni)).forEach(ni => {
+      document.querySelectorAll(`#panel-contenido .mastil-body [data-ni="${ni}"]`).forEach(celda => {
+        if (celda.querySelector('.nota-pto')) return;
+        const dot = document.createElement('div');
+        dot.className = 'nota-pto nota-extra';
+        dot.style.cssText = `background:rgba(0,0,0,.5);border:2px dashed ${color};box-shadow:0 0 6px ${color}80`;
+        dot.innerHTML = `<span class="nota-txt" style="color:${color}">${NOTAS[ni]}</span>`;
+        celda.appendChild(dot);
+      });
+    });
+  }
+
   function limpiarHighlight() {
     const estado = window.GuitarScaleFinder.EstadoApp;
     clearTimeout(estado.acorDeHighlightTimer);
@@ -53,8 +90,9 @@
     estado.acordeDiatSel = null;
     estado.acordeDiatColor = null;
     aplicarHighlight(null);
+    document.querySelectorAll('#panel-contenido .nota-extra').forEach(el => el.remove());
     eliminarBanner();
-    document.querySelectorAll('#panel-contenido .diat-item').forEach(el => el.classList.remove('activo'));
+    document.querySelectorAll('#panel-contenido .diat-main, #panel-contenido .diat-var').forEach(el => el.classList.remove('activo'));
   }
 
   // ── Vista Detector ────────────────────────────────────────────────────────
@@ -184,15 +222,26 @@
 
   function generarHtmlAcordesDiatonicos(escala, ti) {
     if (!escala.acordesDiat) return '';
-    let h = `<div class="diat-box"><p class="diat-tit">Acordes diatónicos <span style="color:var(--txt2);font-size:10px">— toca para escuchar</span></p><div class="diat-lista" id="diat-lista">`;
+    let h = `<div class="diat-box"><p class="diat-tit">Acordes diatónicos <span style="color:var(--txt2);font-size:10px">— toca para escuchar</span></p><div class="diat-grid" id="diat-lista">`;
     escala.intervalos.forEach((intervalo, i) => {
       const ri = (ti + intervalo) % 12;
-      const suf = SUFMAP[escala.acordesDiat[i]] ?? '';
+      const tipoDiat = escala.acordesDiat[i];
+      const suf = SUFMAP[tipoDiat] ?? '';
       const nombre = `${NOTAS[ri]}${suf}`;
-      h += `<div class="diat-item" style="border-color:${COLORES_GRADO[i]}" data-acorde="${nombre}" data-color="${COLORES_GRADO[i]}">
-        <span class="diat-grado" style="color:${COLORES_GRADO[i]}">${escala.grados[i]}</span>
-        <span class="diat-nom">${nombre}</span>
-      </div>`;
+      const color = COLORES_GRADO[i];
+      h += `<div class="diat-col">
+        <div class="diat-main" data-acorde="${nombre}" data-color="${color}" style="border-color:${color}">
+          <span class="diat-grado" style="color:${color}">${escala.grados[i]}</span>
+          <span class="diat-nom">${nombre}</span>
+        </div>`;
+      (VARIANTES_TIPO[tipoDiat] ?? []).forEach(vTipo => {
+        const vDef = TIPOS_ACORDE[vTipo];
+        if (!vDef) return;
+        const vNom = `${NOTAS[ri]}${vDef.sufijo}`;
+        const vLabel = vDef.sufijo !== '' ? vDef.sufijo : vNom;
+        h += `<span class="diat-var" data-acorde="${vNom}" data-color="${color}" style="color:${color}">${vLabel}</span>`;
+      });
+      h += '</div>';
     });
     return h + '</div></div>';
   }
@@ -284,20 +333,20 @@
         limpiarHighlight();
         const notasIdx = obtenerNotasAcorde(nombre);
         ServicioAudio.reproducirAcorde(notasIdx);
-        if (EstadoApp.mostrarEnMastil) {
-          EstadoApp.acordeDiatSel = nombre;
-          EstadoApp.acordeDiatColor = color;
-          EstadoApp.hlAcordeIdx = notasIdx;
-          item.classList.add('activo');
-          aplicarHighlight(EstadoApp.hlAcordeIdx);
-          let seg = 35;
+        EstadoApp.acordeDiatSel = nombre;
+        EstadoApp.acordeDiatColor = color;
+        EstadoApp.hlAcordeIdx = notasIdx;
+        item.classList.add('activo');
+        aplicarHighlight(EstadoApp.hlAcordeIdx);
+        agregarNotasExtra(notasIdx, color);
+        const durSeg = EstadoApp.mostrarEnMastil ? 300 : 35;
+        let seg = durSeg;
+        actualizarBanner(nombre, EstadoApp.hlAcordeIdx, color, seg);
+        EstadoApp.hlCountdownInterval = setInterval(() => {
+          seg--;
           actualizarBanner(nombre, EstadoApp.hlAcordeIdx, color, seg);
-          EstadoApp.hlCountdownInterval = setInterval(() => {
-            seg--;
-            actualizarBanner(nombre, EstadoApp.hlAcordeIdx, color, seg);
-          }, 1000);
-          EstadoApp.acorDeHighlightTimer = setTimeout(() => limpiarHighlight(), 5000);
-        }
+        }, 1000);
+        EstadoApp.acorDeHighlightTimer = setTimeout(() => limpiarHighlight(), durSeg * 1000);
       });
     }
 

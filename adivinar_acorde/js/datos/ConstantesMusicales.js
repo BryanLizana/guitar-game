@@ -4,17 +4,24 @@
 const NOTAS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 
 const INTERVALOS_ACORDE = {
-    maj: [0, 4, 7],
-    m:   [0, 3, 7],
-    dim: [0, 3, 6],
-    aug: [0, 4, 8],
+    maj:    [0, 4, 7],
+    m:      [0, 3, 7],
+    dim:    [0, 3, 6],
+    aug:    [0, 4, 8],
+    // Novenas sin 5ª (voicing habitual en guitarra: R + 3ª + 7ª + 9ª)
+    '9':    [0, 4, 10, 2],
+    'maj9': [0, 4, 11, 2],
+    'm9':   [0, 3, 10, 2],
 };
 
 const NOMBRE_TIPO = {
-    maj: 'Mayor',
-    m:   'menor',
-    dim: 'disminuido',
-    aug: 'aumentado',
+    maj:    'Mayor',
+    m:      'menor',
+    dim:    'disminuido',
+    aug:    'aumentado',
+    '9':    'dominante novena',
+    'maj9': 'mayor novena',
+    'm9':   'menor novena',
 };
 
 const INTERVALOS_ESCALA = {
