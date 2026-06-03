@@ -30,29 +30,23 @@ function loadLS() {
   renderAll(); renderProps(); renderSlidePanel(); status(); snapshot();
 }
 
-// ── Export HTML (self-contained: inlines CSS + JS + state) ────────────
-async function exportHTML() {
+// ── Export HTML (self-contained: reads CSS+JS from DOM, works desde file://) ──
+function exportHTML() {
   const state = JSON.stringify({slides: S.slides, nid: S.nid, nsid: S.nsid});
 
-  let css, jsTexts;
-  try {
-    [css, ...jsTexts] = await Promise.all([
-      fetch('css/main.css').then(r => r.text()),
-      fetch('js/config.js').then(r => r.text()),
-      fetch('js/state.js').then(r => r.text()),
-      fetch('js/renderer.js').then(r => r.text()),
-      fetch('js/props.js').then(r => r.text()),
-      fetch('js/slides.js').then(r => r.text()),
-      fetch('js/interactions.js').then(r => r.text()),
-      fetch('js/controls.js').then(r => r.text()),
-      fetch('js/app.js').then(r => r.text()),
-    ]);
-  } catch {
-    alert('Error al leer los archivos.\nAbre la app desde un servidor local (ej: VS Code Live Server) para poder exportar.');
+  // Read CSS from the already-loaded stylesheet in the DOM
+  const css = Array.from(document.styleSheets)
+    .flatMap(sheet => { try { return Array.from(sheet.cssRules); } catch(e) { return []; } })
+    .map(r => r.cssText)
+    .join('\n');
+
+  // Read JS from the inline <script id="wf-bundle"> tag
+  const bundleEl = document.getElementById('wf-bundle');
+  if (!bundleEl) {
+    alert('No se puede exportar: el script bundle no está disponible.\nAsegúrate de usar index.html sin modificaciones.');
     return;
   }
-
-  const js = jsTexts.join('\n\n');
+  const js = bundleEl.textContent;
 
   const bodyHTML = `
 <div id="hdr">
@@ -124,6 +118,10 @@ async function exportHTML() {
       <button class="spbtn" onclick="prevSlide()">◀</button>
       <span id="sp-counter">1 / 1</span>
       <button class="spbtn" onclick="nextSlide()">▶</button>
+    </div>
+    <div class="sp-row" style="justify-content:center;">
+      <button class="spbtn" onclick="moveSlide(-1)" title="Mover slide a la izquierda">◁ Mover</button>
+      <button class="spbtn" onclick="moveSlide(1)" title="Mover slide a la derecha">Mover ▷</button>
     </div>
   </div>
   <div id="slide-thumbs"></div>

@@ -123,7 +123,9 @@ function renderProps() {
     h += `<div class="prop"><label>Color fondo</label><div class="pc"><input type="color" id="pp-bg" value="${bgV}" oninput="p('bg',this.value)"><label><input type="checkbox" ${c.bg==='transparent'?'checked':''} onchange="p('bg',this.checked?'transparent':document.getElementById('pp-bg').value)"> Transp.</label></div></div>`;
     h += `<div class="prop"><label>Color texto</label><div class="pc"><input type="color" value="${c.tc||'#333333'}" oninput="p('tc',this.value)"></div></div>`;
   }
-  h += `<hr class="pdiv"><div class="prop"><label>Capa</label><input type="number" min="1" value="${c.z||1}" oninput="p('z',+this.value,1)"></div>`;
+  h += `<hr class="pdiv">`;
+  h += `<div class="prop"><label>Capa</label><input type="number" min="1" value="${c.z||1}" oninput="p('z',+this.value,1)"></div>`;
+  h += `<div class="prop"><label><input type="checkbox" ${c.locked?'checked':''} onchange="p('locked',this.checked)"> 📌 Anclar capa (no sube al frente)</label></div>`;
   h += `<hr class="pdiv"><button class="pbtn sec" onclick="copyComp()">⎘ Copiar (Ctrl+C)</button><button class="pbtn sec" onclick="dupComp()">⧉ Duplicar</button><button class="pbtn sec" onclick="front()">↑ Al frente</button><button class="pbtn del" onclick="delComp()">✕ Eliminar</button>`;
   $pb.innerHTML = h;
 }
@@ -146,5 +148,20 @@ function renderMultiProps() {
 function p(key, val, isPos) {
   const c = cc().find(x => x.id === S.sel); if (!c) return;
   if (isPos) val = parseFloat(val) || 0;
+
+  // Table: auto-resize component when adding columns or rows
+  if (c.type === 'tbl') {
+    if (key === 'cols') {
+      const delta = val - (c.cols || 3);
+      c.width = Math.max(120, c.width + delta * 90);
+      const pw = document.getElementById('pp-w'); if (pw) pw.value = Math.round(c.width);
+    }
+    if (key === 'rows') {
+      const delta = val - (c.rows || 4);
+      c.height = Math.max(40, c.height + delta * 34);
+      const ph = document.getElementById('pp-h'); if (ph) ph.value = Math.round(c.height);
+    }
+  }
+
   c[key] = val; patch(c); dSnap();
 }

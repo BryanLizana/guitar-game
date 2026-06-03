@@ -33,6 +33,16 @@ function delSlide() {
   renderAll(); renderProps(); renderSlidePanel(); status();
 }
 
+function moveSlide(dir) {
+  const newIdx = S.cur + dir;
+  if (newIdx < 0 || newIdx >= S.slides.length) return;
+  snapshot();
+  const slide = S.slides.splice(S.cur, 1)[0];
+  S.slides.splice(newIdx, 0, slide);
+  S.cur = newIdx;
+  renderSlidePanel();
+}
+
 function clearSlide() {
   if (!cc().length) return;
   if (!confirm('¿Limpiar este slide?')) return;

@@ -105,7 +105,8 @@ function onCompDown(e) {
   else { S.sel = id; renderProps(); }
 
   const comp = cc().find(x => x.id === id);
-  if (comp) {
+  // Auto bring-to-front only if not locked
+  if (comp && !comp.locked) {
     const maxZ = Math.max(...cc().map(x => x.z || 1));
     if (comp.z < maxZ) { comp.z = maxZ + 1; const el = $cv.querySelector(`[data-id="${id}"]`); if (el) el.style.zIndex = comp.z; }
   }
@@ -117,6 +118,13 @@ function onCompDown(e) {
   const snapping = () => document.getElementById('gridChk').checked;
   let moved = false;
   const mv = e2 => {
+    if (!moved) {
+      // First move: apply drag opacity to all selected elements
+      S.multiSel.forEach(sid => {
+        const el = $cv.querySelector(`[data-id="${sid}"]`);
+        if (el) el.style.opacity = '0.5';
+      });
+    }
     let dx = e2.clientX / S.scale - sx, dy = e2.clientY / S.scale - sy;
     if (snapping()) { dx = Math.round(dx / 20) * 20; dy = Math.round(dy / 20) * 20; }
     S.multiSel.forEach(sid => {
@@ -135,6 +143,11 @@ function onCompDown(e) {
   };
   const up = () => {
     document.removeEventListener('mousemove', mv); document.removeEventListener('mouseup', up);
+    // Reset opacity
+    S.multiSel.forEach(sid => {
+      const el = $cv.querySelector(`[data-id="${sid}"]`);
+      if (el) el.style.opacity = '';
+    });
     if (moved) { snapshot(); updateCurThumb(); }
   };
   document.addEventListener('mousemove', mv);
@@ -209,16 +222,31 @@ function front() {
 }
 
 function copyComp() {
-  const c = cc().find(x => x.id === S.sel); if (!c) return;
-  S.clip = JSON.parse(JSON.stringify(c));
+  if (S.multiSel.size > 1) {
+    // Copy full multi-selection as array
+    S.clip = getSelComps().map(c => JSON.parse(JSON.stringify(c)));
+  } else {
+    const c = cc().find(x => x.id === S.sel); if (!c) return;
+    S.clip = JSON.parse(JSON.stringify(c));
+  }
 }
 
 function pasteComp() {
   if (!S.clip) return; snapshot();
-  const copy = JSON.parse(JSON.stringify(S.clip));
-  copy.id = S.nid++; copy.x += 20; copy.y += 20;
-  S.clip = JSON.parse(JSON.stringify(copy));
-  cc().push(copy); $cv.appendChild(mkEl(copy)); sel(copy.id); updateCurThumb(); status();
+  const clips = Array.isArray(S.clip) ? S.clip : [S.clip];
+  const copies = clips.map(cl => {
+    const copy = JSON.parse(JSON.stringify(cl));
+    copy.id = S.nid++; copy.x += 20; copy.y += 20;
+    return copy;
+  });
+  // Shift clip offsets for next paste
+  S.clip = Array.isArray(S.clip)
+    ? S.clip.map(cl => ({...cl, x: cl.x + 20, y: cl.y + 20}))
+    : {...S.clip, x: S.clip.x + 20, y: S.clip.y + 20};
+  copies.forEach(copy => { cc().push(copy); $cv.appendChild(mkEl(copy)); });
+  S.multiSel = new Set(copies.map(c => c.id));
+  S.sel = copies.at(-1)?.id || null;
+  updVis(); renderProps(); updateCurThumb(); status();
 }
 
 // ── Alignment ─────────────────────────────────────────────────────────
