@@ -30,15 +30,29 @@ function loadLS() {
   renderAll(); renderProps(); renderSlidePanel(); status(); snapshot();
 }
 
-// ── Export HTML (embeds state, links to server CSS/JS) ────────────────
-function exportHTML() {
-  const baseUrl = prompt(
-    'URL base del servidor donde están los archivos CSS/JS:\n(sin barra final)',
-    'https://tuservidor.com/balsame'
-  );
-  if (baseUrl === null) return;
-  const url = baseUrl.replace(/\/$/, '');
+// ── Export HTML (self-contained: inlines CSS + JS + state) ────────────
+async function exportHTML() {
   const state = JSON.stringify({slides: S.slides, nid: S.nid, nsid: S.nsid});
+
+  let css, jsTexts;
+  try {
+    [css, ...jsTexts] = await Promise.all([
+      fetch('css/main.css').then(r => r.text()),
+      fetch('js/config.js').then(r => r.text()),
+      fetch('js/state.js').then(r => r.text()),
+      fetch('js/renderer.js').then(r => r.text()),
+      fetch('js/props.js').then(r => r.text()),
+      fetch('js/slides.js').then(r => r.text()),
+      fetch('js/interactions.js').then(r => r.text()),
+      fetch('js/controls.js').then(r => r.text()),
+      fetch('js/app.js').then(r => r.text()),
+    ]);
+  } catch {
+    alert('Error al leer los archivos.\nAbre la app desde un servidor local (ej: VS Code Live Server) para poder exportar.');
+    return;
+  }
+
+  const js = jsTexts.join('\n\n');
 
   const bodyHTML = `
 <div id="hdr">
@@ -125,19 +139,14 @@ function exportHTML() {
 <head>
   <meta charset="UTF-8">
   <title>WireForms</title>
-  <link rel="stylesheet" href="${url}/css/main.css">
+  <style>${css}<\/style>
 </head>
 <body>
 ${bodyHTML}
-<script>window.__WF_INIT__ = ${state};<\/script>
-<script src="${url}/js/config.js"><\/script>
-<script src="${url}/js/state.js"><\/script>
-<script src="${url}/js/renderer.js"><\/script>
-<script src="${url}/js/props.js"><\/script>
-<script src="${url}/js/slides.js"><\/script>
-<script src="${url}/js/interactions.js"><\/script>
-<script src="${url}/js/controls.js"><\/script>
-<script src="${url}/js/app.js"><\/script>
+<script>
+window.__WF_INIT__ = ${state};
+${js}
+<\/script>
 </body>
 </html>`;
 
