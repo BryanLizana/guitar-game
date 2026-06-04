@@ -30,6 +30,35 @@ function loadLS() {
   renderAll(); renderProps(); renderSlidePanel(); status(); snapshot();
 }
 
+// ── Import HTML ───────────────────────────────────────────────────────────
+function importHTML() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.html';
+  input.onchange = e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const text = ev.target.result;
+      const idx = text.indexOf('window.__WF_INIT__');
+      if (idx === -1) { alert('No es un archivo WireForms exportado.'); return; }
+      const jsonStart = text.indexOf('{', idx);
+      if (jsonStart === -1) { alert('Formato inválido.'); return; }
+      const lineEnd = text.indexOf('\n', jsonStart);
+      try {
+        const jsonStr = (lineEnd === -1 ? text.slice(jsonStart) : text.slice(jsonStart, lineEnd)).replace(/;$/, '').trim();
+        const d = JSON.parse(jsonStr);
+        S.slides = d.slides || [{id:1, title:'Slide 1', comps:[]}];
+        S.nid = d.nid || 1; S.nsid = d.nsid || 2;
+        S.cur = 0; S.sel = null; S.multiSel.clear();
+        renderAll(); renderProps(); renderSlidePanel(); status(); snapshot();
+      } catch(err) { alert('Error al importar: ' + err.message); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
 // ── Export HTML (self-contained: reads CSS+JS from DOM, works desde file://) ──
 function exportHTML() {
   const state = JSON.stringify({slides: S.slides, nid: S.nid, nsid: S.nsid});
@@ -64,6 +93,8 @@ function exportHTML() {
   <span id="zoom-val">100%</span>
   <button class="hbtn" onclick="zoom(+0.1)">+</button>
   <div class="spacer"></div>
+  <button class="hbtn" onclick="importHTML()">📥 Importar HTML</button>
+  <button class="hbtn" onclick="exportHTML()">📤 Exportar HTML</button>
   <button class="hbtn pri" onclick="window.print()">Exportar PDF</button>
 </div>
 <div id="main">
@@ -151,7 +182,9 @@ ${js}
   const blob = new Blob([doc], {type: 'text/html;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'wireframes-presentacion.html';
+  const now = new Date();
+  const ts = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '-' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
+  a.download = 'wireframes-' + ts + '.html';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

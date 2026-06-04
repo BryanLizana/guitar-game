@@ -191,6 +191,7 @@ body.sketch .wf-alert{border-width:2px!important;}
   <span id="zoom-val">100%</span>
   <button class="hbtn" onclick="zoom(+0.1)">+</button>
   <div class="spacer"></div>
+  <button class="hbtn" onclick="importHTML()">📥 Importar HTML</button>
   <button class="hbtn" onclick="exportHTML()">📤 Exportar HTML</button>
   <button class="hbtn pri" onclick="window.print()">Exportar PDF</button>
 </div>
@@ -544,6 +545,7 @@ function zoom(delta){S.scale=Math.min(2,Math.max(0.25,S.scale+delta));$cv.style.
 function toggleSketch(){S.sketch=!S.sketch;document.body.classList.toggle('sketch',S.sketch);document.getElementById('sketch-btn').classList.toggle('active',S.sketch);}
 function saveLS(){localStorage.setItem('wf',JSON.stringify({slides:S.slides,nid:S.nid,nsid:S.nsid}));const b=event.target;b.textContent='✓ Guardado';setTimeout(()=>b.textContent='💾 Guardar',1500);}
 function loadLS(){const raw=localStorage.getItem('wf');if(!raw){alert('No hay diseño guardado.');return;}const d=JSON.parse(raw);S.slides=d.slides||[{id:1,title:'Slide 1',comps:[]}];S.nid=d.nid||1;S.nsid=d.nsid||2;S.cur=0;S.sel=null;S.multiSel.clear();renderAll();renderProps();renderSlidePanel();status();snapshot();}
+function importHTML(){const input=document.createElement('input');input.type='file';input.accept='.html';input.onchange=e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{const text=ev.target.result;const idx=text.indexOf('window.__WF_INIT__');if(idx===-1){alert('No es un archivo WireForms exportado.');return;}const jsonStart=text.indexOf('{',idx);if(jsonStart===-1){alert('Formato inválido.');return;}const lineEnd=text.indexOf('\n',jsonStart);try{const jsonStr=(lineEnd===-1?text.slice(jsonStart):text.slice(jsonStart,lineEnd)).replace(/;$/,'').trim();const d=JSON.parse(jsonStr);S.slides=d.slides||[{id:1,title:'Slide 1',comps:[]}];S.nid=d.nid||1;S.nsid=d.nsid||2;S.cur=0;S.sel=null;S.multiSel.clear();renderAll();renderProps();renderSlidePanel();status();snapshot();}catch(err){alert('Error al importar: '+err.message);}};reader.readAsText(file);};input.click();}
 function exportHTML(){
   const state=JSON.stringify({slides:S.slides,nid:S.nid,nsid:S.nsid});
   const css=Array.from(document.styleSheets).flatMap(sheet=>{try{return Array.from(sheet.cssRules);}catch(e){return[];}}).map(r=>r.cssText).join('\n');
@@ -553,7 +555,7 @@ function exportHTML(){
   const bodyHTML=document.body.innerHTML.replace(/<script id="wf-bundle"[\s\S]*?<\/script>/i,'').trim();
   const doc=`<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<title>WireForms<\/title>\n<style>${css}<\/style>\n<\/head>\n<body>\n${bodyHTML}\n<script id="wf-bundle">\nwindow.__WF_INIT__=${state};\n${js}\n<\/script>\n<\/body>\n<\/html>`;
   const blob=new Blob([doc],{type:'text/html;charset=utf-8'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='wireframes.html';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
+  const _n=new Date();const _ts=_n.getFullYear()+String(_n.getMonth()+1).padStart(2,'0')+String(_n.getDate()).padStart(2,'0')+'-'+String(_n.getHours()).padStart(2,'0')+String(_n.getMinutes()).padStart(2,'0');const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='wireframes-'+_ts+'.html';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
 }
 function status(){$sn.innerHTML=`Slide <b>${S.cur+1}/${S.slides.length}</b> · <b>${cc().length}</b> elementos`;if(S.multiSel.size>1){$ssel.innerHTML=`<b>${S.multiSel.size}</b> seleccionados`;}else if(S.sel){const c=cc().find(x=>x.id===S.sel);$ssel.innerHTML=c?`<b>${TN[c.type]||c.type}</b> (${Math.round(c.x)},${Math.round(c.y)}) ${Math.round(c.width)}×${Math.round(c.height)}`:'Nada';}else{$ssel.textContent='Nada seleccionado';}}
 
