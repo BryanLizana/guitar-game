@@ -8,7 +8,7 @@ const PERSONALITY_FILE = './personality.md';
 const MODEL = process.env.CLAUDE_MODEL || 'haiku';
 const TIMEOUT_MS = 120_000;
 // El historial crece con cada turno; reiniciar la sesión lo mantiene acotado.
-const MAX_TURNS_PER_SESSION = 30;
+const MAX_TURNS_PER_SESSION = 20;
 
 let CLAUDE_BIN;
 try {
